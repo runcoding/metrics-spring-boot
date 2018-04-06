@@ -23,6 +23,8 @@ run monitor-spring-test
 
 ```html
 - http://localhost:8080/monitor/index.html
+<img src='https://github.com/runcoding/metrics-spring-boot/raw/master/snapshot/monitor_index.png'>
 - http://localhost:8080/monitor/metric.html
-
+<img src='https://github.com/runcoding/metrics-spring-boot/raw/master/snapshot/monitor_metric.png'>
 ```
+
