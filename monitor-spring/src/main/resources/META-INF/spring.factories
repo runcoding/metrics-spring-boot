@@ -1,0 +1,2 @@
+## 启用系统监控
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.runcoding.monitor.config.MonitorConfiguration

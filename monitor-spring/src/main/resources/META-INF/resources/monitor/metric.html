@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>服务监控</title> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.min.css" />
+    <script src="https://cdn.bootcss.com/Chart.js/2.7.0/Chart.min.js"></script>
+    <script src="https://cdn.bootcss.com/moment.js/2.19.0/moment.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/2.1.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/amazeui/2.7.2/js/amazeui.min.js"></script>
+    <style>
+        canvas{
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        } 
+    </style>
+    <script>
+        (function () {
+            String.prototype.replaceAll = function(s1,s2){
+                return this.replace(new RegExp(s1,"gm"),s2);
+            }
+            var serverHost = window.location.href.replaceAll("/monitor/metric.html","");
+            serverHost = serverHost.split("?")[0];
+            var JQ_COM_API = window.JQ_COM_API = {};
+            /**
+             * ajax json 请求
+             * */
+            JQ_COM_API.requestByJson = function(req,fun){
+                fun.success = fun.success ||  function(req){console.log('获取成功')};
+                fun.cancel  = fun.cancel  ||  function(req){console.log('操作取消')};
+                fun.fail    = fun.fail    ||  function(req){console.log('操作失败')};
+                $.ajax({
+                    url:         serverHost + req.url ,
+                    type:        req.method      || "POST",
+                    contentType: req.contentType || 'application/json',
+                    dataType:    req.dataType    || "json",
+                    async:       req.async == null ? true : req.async,
+                    timeout:     req.timeout     || 60000,
+                    data:        req.data        || {},
+                    success: function (data) {
+                        var code  = data.status;
+                        //console.log("请求返回code："+code);
+                        if( code == 200){
+                            fun.success(req,data);
+                        } else{
+                            fun.fail(req,data);
+                        }
+                    },
+                    error: function(xhr, type){
+                        fun.fail(req,null);
+                    }
+                })
+            }
+
+        })()
+    </script>
+</head>
+
+<body>
+<div class="am-g">
+    <div class="am-u-sm-2"></div>
+    <div class="am-u-sm-4">
+       <h1>服务运行情况</h1>
+    </div>
+</div>
+
+
+<div class="am-g">
+    <div class="am-u-sm-12 "> 
+         <table class="am-table am-table-bordered am-table-radius " >
+            <thead>
+               <tr>
+                  <th width="10%">序号</th>
+                  <th width="15%">统计日期</th>
+                  <th width="55%">接口名称</th>
+                  <th width="10%">总次数</th>
+                  <th width="10%">耗时均值(s)</th>
+               </tr>
+            </thead>
+            <tbody id="tbody_sys_api_info" >
+
+            </tbody> 
+            <script  type="text/html" id="tpl_sys_api_tr">
+                <tr>
+                    <td>{{sequence}}</td>
+                    <td>{{refDate}}</td>
+                    <td>{{methodName}}</td>
+                    <td>{{totalCnt}}</td> 
+                    <td>{{minuteRate}}</td> 
+                </tr>
+            </script>
+        </table>
+    </div>
+</div>
+<script>
+    var autoGetSysApi = function(){
+        JQ_COM_API.requestByJson({
+            url:"/admin/monitor/api_analysis",
+            method:"GET"
+        },{
+            success:function(req,data){
+                var result = data.data || {};
+                for( var i in result){
+                    var obj = result[i];
+                    var tplSysApiTr = $('#tpl_sys_api_tr').text();
+                    tplSysApiTr = tplSysApiTr.replaceAll("{{sequence}}",i);
+                    tplSysApiTr = tplSysApiTr.replaceAll("{{refDate}}",obj.refDate);
+                    tplSysApiTr = tplSysApiTr.replaceAll("{{methodName}}",obj.name);
+                    tplSysApiTr = tplSysApiTr.replaceAll("{{totalCnt}}",obj.count);
+                    tplSysApiTr = tplSysApiTr.replaceAll("{{minuteRate}}",obj.minuteRate);
+                    $('#tbody_sys_api_info').append(tplSysApiTr);
+                }
+            },fail: function(req,data){
+                alert("请求出错");
+                return;
+            }
+        })
+    }
+    autoGetSysApi();
+</script>
+</body>
+
+</html>

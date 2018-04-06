@@ -19,10 +19,9 @@ runcoding.monitor.sqlite.storePath = ## 默认  当前用户目录 + /data/sqlit
 spring.application.name = ## 数据文件名称，默认 monitor.db
 ```
 ## 查看统计
-run monitor-spring-test
 
 ```html
-- http://localhost:8080/monitor/index.html
-- http://localhost:8080/monitor/metric.html
+- http://localhost:{{port}}/monitor/index.html
+- http://localhost:{{port}}/monitor/metric.html
 
 ```

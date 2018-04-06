@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.runcoding.monitor.web.dao.MetricInfoMapper">
+    
+
+    <select id="findMetricInfo" resultType="com.runcoding.monitor.web.model.metrics.MetricInfo">
+     SELECT
+          id,
+          refDate,
+          name,
+          count,
+          minuteRate
+     FROM
+       metric_info
+     ORDER BY  minuteRate DESC
+     limit 200
+    </select>
+
+    <insert id="insert" keyProperty="id" parameterType="com.runcoding.monitor.web.model.metrics.MetricInfo"
+            useGeneratedKeys="true">
+        INSERT INTO  "metric_info" (
+            "refDate",
+            "name",
+            "count",
+            "minuteRate"
+        )
+        VALUES
+            (
+                #{refDate},
+                #{name},
+                #{count},
+                #{minuteRate}
+            )
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM metric_info where  refDate  <![CDATA[<=  #{delDate}]]>
+    </delete>
+
+</mapper>

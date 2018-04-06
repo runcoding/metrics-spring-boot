@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>服务监控</title> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.min.css" />
+    <script src="https://cdn.bootcss.com/Chart.js/2.7.0/Chart.min.js"></script>
+    <script src="https://cdn.bootcss.com/moment.js/2.19.0/moment.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/2.1.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/amazeui/2.7.2/js/amazeui.min.js"></script>
+    <style>
+        canvas{
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        } 
+    </style>
+    <script>
+        (function () {
+            String.prototype.replaceAll = function(s1,s2){
+                return this.replace(new RegExp(s1,"gm"),s2);
+            }
+            var serverHost = window.location.href.replaceAll("monitor/index.html","");
+                serverHost = serverHost.split("?")[0];
+
+            var JQ_COM_API = window.JQ_COM_API = {};
+            /**
+             * ajax json 请求
+             * */
+            JQ_COM_API.requestByJson = function(req,fun){
+                console.log("serverHost="+serverHost+",req.url="+req.url)
+                fun.success = fun.success ||  function(req){console.log('获取成功')};
+                fun.cancel  = fun.cancel  ||  function(req){console.log('操作取消')};
+                fun.fail    = fun.fail    ||  function(req){console.log('操作失败')};
+                $.ajax({
+                    url:         serverHost + req.url ,
+                    type:        req.method      || "POST",
+                    contentType: req.contentType || 'application/json',
+                    dataType:    req.dataType    || "json",
+                    async:       req.async == null ? true : req.async,
+                    timeout:     req.timeout     || 60000,
+                    data:        req.data        || {},
+                    success: function (data) {
+                        var code  = data.status;
+                        //console.log("请求返回code："+code);
+                        if( code == 200){
+                            fun.success(req,data);
+                        } else{
+                            fun.fail(req,data);
+                        }
+                    },
+                    error: function(xhr, type){
+                        fun.fail(req,null);
+                    }
+                })
+            }
+
+        })()
+    </script>
+</head>
+
+<body>
+<div class="am-g">
+    <div class="am-u-sm-2"></div>
+    <div class="am-u-sm-4">
+       <h1  >服务运行情况</h1>
+    </div>
+    <div class="am-u-sm-6" id="sys_info">
+        <select data-am-selected id="select_id">
+            <option value="all" selected>监控全部服务</option>
+        </select>
+        <button type="button" class="am-btn am-btn-success autoGetSysInfo" onclick="autoGetSysInfo()">自动(开关)监控</button> 
+        <button type="button" class="am-btn am-btn-warning" onclick="apiMetricsClear()">清理接口统计</button>
+    </div>
+</div>
+<div class="am-g">
+    <div class="am-u-sm-8">
+        <canvas id="canvas_thread"></canvas>
+        <canvas id="canvas_metric"></canvas>
+        <canvas id="canvas_head"></canvas>
+    </div>
+    <div class="am-u-sm-4" id="sys_info">
+        <table class="am-table am-table-bordered am-table-radius">
+            <thead>
+            <tr><th>名称</th><th>状态描述</th></tr>
+            </thead>
+            <tbody id="tbody_sys_info">
+
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="am-g">
+    <div class="am-u-sm-12 am-scrollable-vertical"> 
+         <table class="am-table am-table-bordered am-table-radius " >
+            <thead>
+               <tr>
+                <th>服务器ip</th>
+                <th>请求开始时间</th>
+                <th>请求结束时间</th>
+                <th>请求耗时(s) 
+                   <button class="am-badge am-badge-success am-radius" onclick="showTimeOut()">显示>3s</button>
+                </th>
+                </tr>
+            </thead>
+            <tbody id="tbody_sys_req_info" >
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    var autoGetSysStatus = true;
+
+    var autoGetSysInfo = function () {
+        autoGetSysStatus = !autoGetSysStatus;
+        $('.autoGetSysInfo').toggleClass('am-btn-secondary');
+        $('.autoGetSysInfo').toggleClass('am-btn-success');
+    }
+
+    var apiMetricsClear = function(){
+         JQ_COM_API.requestByJson({
+            url:"/admin/monitor/api_metrics_clear",
+            method:"DELETE"
+        },{
+            success:function(req,data){
+                 var ip = data.message || {};
+                 alert("服务器("+ip+")api接口统计已经被清理");
+            },fail: function(req,data){
+                //alert("请求出错");
+                return;
+            }
+        })
+    }
+    /**系统请求信息*/
+    var sysReqInfo = {
+        reqStartTime:null,
+        reqEndTime:null,
+        serviceIp:"127.0.0.1"
+    }
+    /**获取数据的次数*/
+    var dataCount  = 0 ;
+    var getSysInfo = function () { 
+        if(!autoGetSysStatus){
+            return;
+        }
+        sysReqInfo.reqStartTime = moment();
+        JQ_COM_API.requestByJson({
+            url:"/admin/monitor/metrics_jvm",
+            method:"GET"
+        },{
+            success:function(req,data){
+                sysReqInfo.reqEndTime = moment();
+                dataCount ++;
+                var result = data.data || {};
+                var ip  = result.operatingSystemInfo.ip;
+                sysReqInfo.serviceIp = ip;
+                 showSysReqInfo(true);
+                if( $("#select_id").val() == ip || $("#select_id").val() == "all"  ){
+                    /**显示线程*/
+                    showThreadGroupChart(result.containerThreadInfo);
+                    /**显示接口次数*/
+                    showMMtricChart(result.metricRegistryInfo.metrics);
+                    /**显示内存信息*/
+                    showHeadChart(result.containerMemoryInfo);
+                    /**显示系统信息*/
+                    sysInfo(result);
+                    selectPrepend(result.operatingSystemInfo.ip);
+                }
+            },fail: function(req,data){
+                sysReqInfo.reqEndTime = moment();
+                showSysReqInfo(false);
+                //alert("请求出错");
+                return;
+            }
+        })
+        window.chartColors = {
+            red: 'rgb(255, 99, 132)',
+            orange: 'rgb(255, 159, 64)',
+            yellow: 'rgb(255, 205, 86)',
+            green: 'rgb(75, 192, 192)',
+            blue: 'rgb(54, 162, 235)',
+            purple: 'rgb(153, 102, 255)',
+            grey: 'rgb(201, 203, 207)'
+        };
+    }
+    getSysInfo();
+    window.setInterval(getSysInfo,3000);
+
+
+   /**-------------------线程图--------------------*/
+    var threadConfig = {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [],
+            datasetIndexs:{}
+        },
+        options: {
+            onClick: function(e){
+                console.log(this);
+            },
+            responsive: true,
+            legend: {
+                position: 'bottom',
+            },
+            title:{
+                display:true,
+                text:'当前服务线程(个数top10)运行情况'
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '时间'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '线程数(个)'
+                    }
+                }]
+            }
+        }
+    };
+
+    var threadColors = {};
+
+    var ctx       = document.getElementById("canvas_thread").getContext("2d");
+ 
+    var showThreadGroupChart = function(threadsInfo) {
+        var threadGroupInfo = threadsInfo.threadGroupInfo;
+        threadConfig.data.labels.push(moment().format('HH:mm:ss'));
+        for( var key in threadGroupInfo){
+            setThreadInfo(key,threadGroupInfo[key].length);
+        }
+        /**线程总数*/
+        setThreadInfo("线程总数",threadsInfo.totalStartedThreadCount);
+        /**仍活动的线程总数*/
+        setThreadInfo("活跃线程总数",threadsInfo.threadCount);
+        if(window.myChart){
+            window.myChart.update();
+        }else {
+            window.myChart = new Chart(ctx, threadConfig);
+        }
+    };
+
+    /**-------------------接口图--------------------*/
+    var metricConfig = {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [],
+            datasetIndexs:{}
+        },
+        options: {
+            onClick: function(e){
+                //console.log(this);
+            },
+            responsive: true,
+            legend: {
+                position: 'bottom',
+            },
+            title:{
+                display:true,
+                text:'当前服务接口处理次数统计运行情况'
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '时间'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '接口处理次数(个)'
+                    }
+                }]
+            }
+        }
+    };
+    var metricColors = {};
+    var ctxMetrics = document.getElementById("canvas_metric").getContext("2d");
+    var quickSort = function(arr) {
+    　　if (arr.length <= 1) { return arr; }
+    　　var pivotIndex = Math.floor(arr.length / 2);
+    　　var pivot = arr.splice(pivotIndex, 1)[0];
+    　　var left = [];
+    　　var right = [];
+    　　for (var i = 0; i < arr.length; i++){
+    　　　　if (arr[i] > pivot) {
+    　　　　　　left.push(arr[i]);
+    　　　　} else {
+    　　　　　　right.push(arr[i]);
+    　　　　}
+    　　}
+    　　return quickSort(left).concat([pivot], quickSort(right));
+    }
+    var showMMtricChart = function(metrics) {
+        metricConfig.data.labels.push(moment().format('HH:mm:ss'));
+        var arr = new Array(metrics.length)
+        var i=0;
+        for( var key in metrics){
+             arr[i] = metrics[key].count;
+             i++;
+        }  
+        /**排序，取最高10条*/
+        arr = quickSort(arr);
+        var threshold =  arr.length <=5 ? arr.length : arr[4]; 
+        for( var key in metrics){
+            setApiCount (key,metrics,threshold)
+        }
+        if(window.ctxMetric){
+            window.ctxMetric.update();
+        }else {
+            window.ctxMetric = new Chart(ctxMetrics, metricConfig);
+        }
+    };
+
+
+ 
+
+ /**-------------------内存图--------------------*/
+    var headConfig = {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [],
+            datasetIndexs:{}
+        },
+        options: {
+            onClick: function(e){
+                console.log(this);
+            },
+            responsive: true,
+            legend: {
+                position: 'bottom',
+            },
+            title:{
+                display:true,
+                text:'当前服务内存运行情况'
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '时间'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '已使用内存数(M)'
+                    }
+                }]
+            }
+        }
+    };
+
+    var headColors = {};
+
+    var ctxHead       = document.getElementById("canvas_head").getContext("2d");
+
+    var showHeadChart = function(headsInfo) { 
+        headConfig.data.labels.push(moment().format('HH:mm:ss'));
+        for( var key in headsInfo){
+            setHeadInfo(headsInfo[key].name,headsInfo[key].used);
+        } 
+        if(window.myHeadChart){
+            window.myHeadChart.update();
+        }else {
+            window.myHeadChart = new Chart(ctxHead, headConfig);
+        }
+    };
+
+    var setThreadInfo = function (key,data) {
+        var threadColor = threadColors[key];
+        if(!threadColor){
+            if(data <5){
+               return ;
+            }
+            threadColors[key] = randomColor();
+        }
+ 
+        var dataset = {
+            label: key,
+            backgroundColor: threadColors[key],
+            borderColor: threadColors[key],
+            data: [
+                data
+            ],
+            fill: false,
+        }
+        if(threadConfig.data.datasetIndexs[key]){
+            threadConfig.data.datasets.forEach(function(dataset) {
+                if(dataset.label == key){
+                    dataset.data.push(data);
+                }
+            });
+        }else {
+            threadConfig.data.datasetIndexs[key] = true;
+            if(dataCount >1){ 
+                var arr = [];
+                for(var i = 0 ; i<dataCount ; i++){
+                   arr[i]=0;
+                }
+                /**以前未显示的数据补充0*/
+                Array.prototype.push.apply(arr, dataset.data);
+                dataset.data = arr;
+            }
+            threadConfig.data.datasets.push(dataset);
+        }
+    }
+
+    var setApiCount = function (key,metrics,threshold) {
+         var tInfo = metrics[key];
+        var metricColor = metricColors[key];
+        if(!metricColor){
+            if(tInfo.count <threshold ){
+             return ;
+            }
+            metricColors[key] = randomColor();
+        } 
+        var dataset = {
+            label: key,
+            backgroundColor: metricColors[key],
+            borderColor: metricColors[key],
+            data: [
+                tInfo.count
+            ],
+            fill: false,
+        }
+        if(metricConfig.data.datasetIndexs[key]){
+            metricConfig.data.datasets.forEach(function(dataset) {
+                if(dataset.label == key){
+                    dataset.data.push(tInfo.count);
+                }
+            });
+        }else {
+            metricConfig.data.datasetIndexs[key] = true;
+            if(dataCount >1){ 
+                var arr = [];
+                for(var i = 0 ; i<dataCount ; i++){
+                   arr[i]=0;
+                }
+                /**以前未显示的数据补充0*/
+                Array.prototype.push.apply(arr, dataset.data);
+                dataset.data = arr;
+            }
+            metricConfig.data.datasets.push(dataset);
+        }
+    }
+
+    var setHeadInfo = function (key,data) {
+        var headColor = headColors[key];
+        if(!headColor){ 
+            headColors[key] = randomColor();
+        } 
+        var dataset = {
+            label: key,
+            backgroundColor: headColors[key],
+            borderColor: headColors[key],
+            data: [
+                data
+            ],
+            fill: false,
+        }
+        if(headConfig.data.datasetIndexs[key]){
+            headConfig.data.datasets.forEach(function(dataset) {
+                if(dataset.label == key){
+                    dataset.data.push(data);
+                }
+            });
+        }else {
+            headConfig.data.datasetIndexs[key] = true;
+            if(dataCount >1){ 
+                var arr = [];
+                for(var i = 0 ; i<dataCount ; i++){
+                   arr[i]=0;
+                }
+                /**以前未显示的数据补充0*/
+                Array.prototype.push.apply(arr, dataset.data);
+                dataset.data = arr;
+            }
+            headConfig.data.datasets.push(dataset);
+        }
+    }
+
+    var showSysReqInfo = function(stat){  
+         var  badgeTmp =  '<span class="am-badge am-badge-success am-radius">成功</span>';
+              badgeTmp = stat ? badgeTmp : '<span class="am-badge am-badge-warning am-radius">失败</span>';
+         var  timeout  = sysReqInfo.reqEndTime.diff(sysReqInfo.reqStartTime)/1000;
+         var  tr = 'noneTimeout';
+              if(timeout > 3){
+                 tr='';
+                 timeout  =  '<span class="am-badge am-badge-warning am-radius">'+timeout+'</span>'; 
+              }
+              
+         var str = "<tr class='"+tr+"'><td>"+badgeTmp+sysReqInfo.serviceIp+"</td><td>"+sysReqInfo.reqStartTime.format('HH:mm:ss')
+                   +"</td><td>"+sysReqInfo.reqEndTime.format('HH:mm:ss')+"</td><td>"+timeout+"</td></tr>";
+         $('#tbody_sys_req_info').prepend(str);
+    }
+
+    var showTimeOut = function(){ 
+         if($(".noneTimeout").is(":hidden")){  
+             $('.noneTimeout').show();
+        }else{  
+             $('.noneTimeout').hide();
+        }   
+    }
+
+
+    var randomColor = function(){
+        return '#'+('00000'+(Math.random()*0x1000000<<0).toString(16)).slice(-6);
+    }
+
+    var sysInfo = function (data) {
+        var  sysData   = data.operatingSystemInfo   || {};
+        var memoryData = data.containerMemoryInfo || {};
+        var threadData = data.containerThreadInfo || {};
+
+        var tmp  = sysTmpInfo("服务ip",sysData.ip);
+            tmp += sysTmpInfo("服务名称",sysData.name+"("+sysData.arch+sysData.version+",核数"+sysData.availableProcessors+")");
+            tmp += sysTmpInfo("总物理内存",sysData.totalPhysicalMemory+"(M)");
+            tmp += sysTmpInfo("已用物理内存",sysData.usedPhysicalMemorySize+"(M)");
+            tmp += sysTmpInfo("剩余物理内存",sysData.freePhysicalMemory+"(M)");
+            tmp += sysTmpInfo("总交换空间",sysData.totalSwapSpaceSize+"(M)");
+            tmp += sysTmpInfo("已用交换空间",sysData.usedSwapSpaceSize+"(M)");
+            tmp += sysTmpInfo("剩余交换空间",sysData.freeSwapSpaceSize+"(M)");
+
+            tmp += sysTmpInfo("仍活动的线程总数",threadData.threadCount);
+            tmp += sysTmpInfo("峰值",threadData.peakThreadCount);
+            tmp += sysTmpInfo("线程总数（被创建并执行过的线程总数）",threadData.totalStartedThreadCount);
+            tmp += sysTmpInfo("当初仍活动的守护线程（daemonThread）总数",threadData.daemonThreadCount);
+
+            for(var i in memoryData){
+                 var memory = memoryData[i];
+                tmp += sysTmpInfo("内存"+memory.name,"初始"+memory.init+
+                                  "(M),上限"+memory.max+"(M),已使用"+memory.used
+                                  +"(M),已申请"+memory.committed+"(M),使用率"+memory.usedRate+"(%)");
+            }
+           $('#tbody_sys_info').html(tmp);
+    }
+
+    var sysTmpInfo = function (name,info) {
+        return"<tr><td>"+name+"</td><td>"+info+"</td></tr>";
+    }
+
+    var selectOption  = {};
+    var selectPrepend = function (ip) {
+        if(!selectOption[ip]){
+            $("#select_id").prepend("<option value='"+ip+"'>内网("+ip+")</option>");
+            selectOption[ip] = ip;
+        }
+    }
+
+
+</script>
+</body>
+
+</html>
