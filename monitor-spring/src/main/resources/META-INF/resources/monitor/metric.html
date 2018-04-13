@@ -60,35 +60,50 @@
 
 <body>
 <div class="am-g">
-    <div class="am-u-sm-2"></div>
     <div class="am-u-sm-4">
-       <h1>服务运行情况</h1>
+        <h1></h1>
+    </div>
+    <div class="am-u-sm-2">
+        <h1>服务运行情况</h1>
+    </div>
+    <div class="am-u-sm-4">
+        <select name="orderType" id="orderType" data-am-selected >
+            <option value="0" selected>处理时长</option>
+            <option value="1" >tps</option>
+            <option value="2" >总次数</option>
+            <option value="3">日期</option>
+        </select>
+        <button type="button" class="am-btn am-btn-success" onclick="autoGetSysApi()">筛选</button>
+    </div>
+    <div class="am-u-sm-2">
     </div>
 </div>
 
 
 <div class="am-g">
-    <div class="am-u-sm-12 "> 
-         <table class="am-table am-table-bordered am-table-radius " >
+    <div class="am-u-sm-12 ">
+        <table class="am-table am-table-bordered am-table-radius " >
             <thead>
-               <tr>
-                  <th width="10%">序号</th>
-                  <th width="15%">统计日期</th>
-                  <th width="55%">接口名称</th>
-                  <th width="10%">总次数</th>
-                  <th width="10%">耗时均值(s)</th>
-               </tr>
+            <tr>
+                <th width="5%">序号</th>
+                <th width="15%">统计日期</th>
+                <th width="45%">接口名称</th>
+                <th width="5%">总次数</th>
+                <th width="15%">近一分钟tps</th>
+                <th width="15%">平均处理时长</th>
+            </tr>
             </thead>
             <tbody id="tbody_sys_api_info" >
 
-            </tbody> 
+            </tbody>
             <script  type="text/html" id="tpl_sys_api_tr">
                 <tr>
                     <td>{{sequence}}</td>
                     <td>{{refDate}}</td>
                     <td>{{methodName}}</td>
-                    <td>{{totalCnt}}</td> 
-                    <td>{{minuteRate}}</td> 
+                    <td>{{totalCnt}}</td>
+                    <td>{{minuteRate}}</td>
+                    <td>{{mean}}</td>
                 </tr>
             </script>
         </table>
@@ -96,8 +111,9 @@
 </div>
 <script>
     var autoGetSysApi = function(){
+        $('#tbody_sys_api_info').empty();
         JQ_COM_API.requestByJson({
-            url:"/admin/monitor/api_analysis",
+            url:"/admin/monitor/api_analysis?orderType="+$('#orderType').val(),
             method:"GET"
         },{
             success:function(req,data){
@@ -110,6 +126,7 @@
                     tplSysApiTr = tplSysApiTr.replaceAll("{{methodName}}",obj.name);
                     tplSysApiTr = tplSysApiTr.replaceAll("{{totalCnt}}",obj.count);
                     tplSysApiTr = tplSysApiTr.replaceAll("{{minuteRate}}",obj.minuteRate);
+                    tplSysApiTr = tplSysApiTr.replaceAll("{{mean}}",obj.mean);
                     $('#tbody_sys_api_info').append(tplSysApiTr);
                 }
             },fail: function(req,data){

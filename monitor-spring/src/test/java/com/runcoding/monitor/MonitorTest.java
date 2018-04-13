@@ -32,7 +32,7 @@ public class MonitorTest {
 
     @Test
     public void findMetricInfo() {
-      List<MetricInfo> list = serviceAnalysisMapper.findMetricInfo();
+        List<MetricInfo> list = serviceAnalysisMapper.findMetricInfo(0);
         logger.info(JSON.toJSONString(list));
     }
 

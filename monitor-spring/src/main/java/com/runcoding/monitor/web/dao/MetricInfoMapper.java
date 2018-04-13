@@ -2,6 +2,7 @@ package com.runcoding.monitor.web.dao;
 
 
 import com.runcoding.monitor.web.model.metrics.MetricInfo;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ import java.util.List;
  **/
 public interface MetricInfoMapper {
 
-   List<MetricInfo> findMetricInfo( );
+   List<MetricInfo> findMetricInfo(@Param("orderType") Integer orderType);
 
    int insert(MetricInfo  metricInfo);
 

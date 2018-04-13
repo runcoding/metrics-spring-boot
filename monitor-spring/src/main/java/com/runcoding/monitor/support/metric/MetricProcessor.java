@@ -30,7 +30,8 @@ public class MetricProcessor {
         String nowDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         for (Map.Entry<String, Timer> entrys : timers.entrySet()) {
             Timer timer = entrys.getValue();
-            methodApis.add(new MetricInfo(nowDate,entrys.getKey(), timer.getCount(), timer.getOneMinuteRate()));
+            double mean = timer.getSnapshot().getMean()/1000000000;
+            methodApis.add(new MetricInfo(nowDate,entrys.getKey(), timer.getCount(), timer.getOneMinuteRate(),mean));
             METRIC_REGISTRY.remove(entrys.getKey());
         }
         return methodApis;

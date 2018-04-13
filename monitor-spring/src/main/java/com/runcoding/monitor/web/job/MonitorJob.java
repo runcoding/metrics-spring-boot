@@ -30,12 +30,16 @@ public class MonitorJob {
 
     @Scheduled(cron = "0 0 * * * ?")
     public void  execute(){
-        List<MetricInfo> metricInfos = MetricProcessor.clearAll();
-        metricInfos.forEach(metricInfo -> {
-            metricInfoMapper.insert(metricInfo);
-        });
-        /**清空7天之前的数据*/
-        metricInfoMapper.delete(LocalDateTime.now().plusDays(-7).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        try{
+            List<MetricInfo> metricInfos = MetricProcessor.clearAll();
+            metricInfos.forEach(metricInfo -> {
+                metricInfoMapper.insert(metricInfo);
+            });
+            /**清空7天之前的数据*/
+            metricInfoMapper.delete(LocalDateTime.now().plusDays(-7).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }catch (Exception e){
+            logger.warn("每小时统计一次服务监控出错",e);
+        }
     }
 
 

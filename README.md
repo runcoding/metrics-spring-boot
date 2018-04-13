@@ -1,9 +1,9 @@
 # metrics-spring-boot
-Metrics Spring-boot Sqlite AOP
+Metrics Spring-boot Sqlite Aop method tps
 
 ## 服务接口监控
  - 查看当前服务内存、线程运行情况。
- - 每小时定时统计接口调用情况。
+ - 每小时定时统计接口调用(count、tps)情况。
  
 ## 使用
  ```xml
@@ -28,3 +28,4 @@ run monitor-spring-test
 ![](snapshot/monitor_metric.png)
  
 
+ 

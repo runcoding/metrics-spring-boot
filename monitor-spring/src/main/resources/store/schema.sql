@@ -2,8 +2,9 @@ CREATE TABLE IF NOT EXISTS "metric_info" (
   "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
   "refDate" text,
   "name" text,
-  "count" text,
-  "minuteRate" real
+  "count" integer,
+  "minuteRate" real,
+  "mean" real
 );
 
 CREATE UNIQUE  INDEX  IF NOT EXISTS "unq_name"

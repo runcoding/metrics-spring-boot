@@ -34,11 +34,11 @@ public class MonitorProcessor {
     private MetricRegistry metricRegistry = MetricProcessor.getMetricRegistry();
 
     /**接口一分钟平均值调用请求超时3s,输出服务当前运行日志*/
-    @Value("${runcoding.monitor.warn_time_out:5}")
-    private int Warn_Time_Out;
+    @Value("${runcoding.monitor.warn_time_out:3000000000}")
+    private long Warn_Time_Out;
 
     /**切入Service*/
-    @Pointcut("execution(* com.runcoding..*.service..*.*(..))")
+    @Pointcut("execution(* *..*.service..*.*(..))")
     public void servicesMethodPointcut(){}
 
     /**api 接口切点*/
@@ -80,15 +80,15 @@ public class MonitorProcessor {
             return joinPoint.proceed();
         } finally {
             /**计时结束*/
-            ctx.stop();
-            toLogger(method,timer);
+            long elapsed = ctx.stop();
+            toLogger(method,timer,elapsed);
         }
     }
 
     /***打印日志*/
-    private void toLogger(Method method,  Timer timer) {
-        /**一分钟平均值*/
-        if(timer.getOneMinuteRate()< Warn_Time_Out){
+    private void toLogger(Method method,  Timer timer,long elapsed) {
+
+        if(elapsed< Warn_Time_Out){
             return;
         }
         /**执行类名称*/
@@ -110,10 +110,11 @@ public class MonitorProcessor {
         long peakThreadCount = threadInfo.getPeakThreadCount();
         /** 当前线程数*/
         long threadCount = threadInfo.getThreadCount();
-        logger.warn("【执行】[method]{}.{},近一分钟执行均值：{}s,[系统]总内存:{},剩余内存:{},[堆]总内存:{},已使用:{},[线程]峰值:{},活动线程数:{}"
-                , className, methodName, timer.getOneMinuteRate(),
-                totalPhysicalMemory, freePhysicalMemory, headMemoryMax, headMemoryUsed, peakThreadCount, threadCount);
+        logger.warn("【执行】[method]{}.{},近一分钟tps：{},耗时均值:{},当前处理时长:{},[系统]总内存:{},剩余内存:{},[堆]总内存:{},已使用:{},[线程]峰值:{},活动线程数:{}"
+                , className, methodName, timer.getOneMinuteRate(),timer.getSnapshot().getMean(),elapsed/1000000000,totalPhysicalMemory,
+                freePhysicalMemory, headMemoryMax, headMemoryUsed, peakThreadCount, threadCount);
     }
+
 
 
 

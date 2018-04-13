@@ -54,6 +54,7 @@ public class MonitorDataSourceConfiguration {
         DruidDataSource datasource = new DruidDataSource();
         datasource.setUrl("jdbc:sqlite:"+storeUrl);
         datasource.setDriverClassName("org.sqlite.JDBC");
+        datasource.setValidationQuery("SELECT 1");
         return datasource;
     }
 

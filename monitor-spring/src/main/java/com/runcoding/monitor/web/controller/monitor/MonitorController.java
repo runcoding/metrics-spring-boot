@@ -50,9 +50,10 @@ public class MonitorController {
 
     @GetMapping(value = "/api_analysis")
     @ResponseBody
-    public MonitorResp queryApiAnalysisList() {
-        List<MetricInfo> list = metricInfoMapper.findMetricInfo();
+    public MonitorResp queryApiAnalysisList(int orderType) {
+        List<MetricInfo> list = metricInfoMapper.findMetricInfo(orderType);
         return MonitorResp.success(list);
     }
+
 
 }

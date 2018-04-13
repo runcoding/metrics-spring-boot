@@ -22,17 +22,21 @@ public class MetricInfo {
     /**本次记录次数*/
     private long count;
 
-    /**本次记录分钟均值*/
+    /**近一分钟tps*/
     private double minuteRate;
+
+    /**平均耗时均值(s)*/
+    private double mean;
 
     public MetricInfo() {
     }
 
-    public MetricInfo(String refDate, String name, long count, double minuteRate) {
+    public MetricInfo(String refDate, String name, long count, double minuteRate, double mean) {
         this.refDate = refDate;
         this.name = name;
         this.count = count;
         this.minuteRate = minuteRate;
+        this.mean = mean;
     }
 
     public String getName() {
@@ -73,6 +77,14 @@ public class MetricInfo {
 
     public void setRefDate(String refDate) {
         this.refDate = refDate;
+    }
+
+    public double getMean() {
+        return mean;
+    }
+
+    public void setMean(double mean) {
+        this.mean = mean;
     }
 
     @Override
