@@ -37,33 +37,16 @@ public class MonitorProcessor {
     @Value("${runcoding.monitor.warn_time_out:3000000000}")
     private long Warn_Time_Out;
 
-    /**切入Service*/
-    @Pointcut("execution(* *..*.service..*.*(..))")
+     /**切入Service*/
+    @Pointcut("bean(*Service)")
     public void servicesMethodPointcut(){}
 
     /**api 接口切点*/
-    @Pointcut("@annotation(org.springframework.web.bind.annotation.RequestMapping)")
+    @Pointcut("bean(*Controller)")
     public void requestMethodPointcut() { }
 
-    /**api get 接口切点*/
-    @Pointcut("@annotation(org.springframework.web.bind.annotation.GetMapping)")
-    public void getMethodPointcut() { }
-
-    /**api post 接口切点*/
-    @Pointcut("@annotation(org.springframework.web.bind.annotation.PostMapping)")
-    public void postMethodPointcut() { }
-
-    /**api put 接口切点*/
-    @Pointcut("@annotation(org.springframework.web.bind.annotation.PutMapping)")
-    public void putMethodPointcut() { }
-
-    /**api delete 接口切点*/
-    @Pointcut("@annotation(org.springframework.web.bind.annotation.DeleteMapping)")
-    public void delMethodPointcut() { }
-
-
     /**环绕的方法*/
-    @Around("servicesMethodPointcut() || getMethodPointcut() || postMethodPointcut() || putMethodPointcut() || delMethodPointcut()")
+    @Around("servicesMethodPointcut() || requestMethodPointcut() ")
     public Object redisCache(ProceedingJoinPoint joinPoint) throws Throwable {
         Method method = ((MethodSignature)joinPoint.getSignature()).getMethod();
         StringBuffer sb = new StringBuffer(method.getName());
