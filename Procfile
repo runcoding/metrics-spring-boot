@@ -1,1 +1,1 @@
-web: java -jar monitor-spring/target/monitor-spring-0.0.1-SNAPSHOT.jar
+web: java -jar -Dserver.port=$PORT monitor-spring/target/monitor-spring-0.0.1-SNAPSHOT.jar
