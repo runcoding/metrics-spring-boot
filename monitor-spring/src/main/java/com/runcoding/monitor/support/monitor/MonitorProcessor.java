@@ -37,13 +37,14 @@ public class MonitorProcessor {
     @Value("${runcoding.monitor.warn_time_out:3000000000}")
     private long Warn_Time_Out;
 
-     /**切入Service*/
+    /**切入Service*/
     @Pointcut("bean(*Service)")
     public void servicesMethodPointcut(){}
 
     /**api 接口切点*/
     @Pointcut("bean(*Controller)")
     public void requestMethodPointcut() { }
+
 
     /**环绕的方法*/
     @Around("servicesMethodPointcut() || requestMethodPointcut() ")
@@ -88,14 +89,10 @@ public class MonitorProcessor {
         long headMemoryMax = headMemory.getMax();
         /** 堆内已使用内存*/
         long headMemoryUsed = headMemory.getUsed();
-        ContainerThreadInfo threadInfo = JvmProcessor.getContainerThreadInfo();
-        /** 线程峰值*/
-        long peakThreadCount = threadInfo.getPeakThreadCount();
-        /** 当前线程数*/
-        long threadCount = threadInfo.getThreadCount();
-        logger.warn("【执行】[method]{}.{},近一分钟tps：{},耗时均值:{},当前处理时长:{},[系统]总内存:{},剩余内存:{},[堆]总内存:{},已使用:{},[线程]峰值:{},活动线程数:{}"
+
+        logger.warn("【执行】[method]{}.{},近一分钟tps：{},耗时均值:{},当前处理时长:{},[系统]总内存:{},剩余内存:{},[堆]总内存:{},已使用:{}"
                 , className, methodName, timer.getOneMinuteRate(),timer.getSnapshot().getMean(),elapsed/1000000000,totalPhysicalMemory,
-                freePhysicalMemory, headMemoryMax, headMemoryUsed, peakThreadCount, threadCount);
+                freePhysicalMemory, headMemoryMax, headMemoryUsed);
     }
 
 

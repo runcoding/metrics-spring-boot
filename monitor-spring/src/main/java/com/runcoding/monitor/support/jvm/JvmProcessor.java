@@ -90,7 +90,7 @@ public class JvmProcessor {
         info.setTotalStartedThreadCount(threadMXBean.getTotalStartedThreadCount());
         info.setDaemonThreadCount(threadMXBean.getDaemonThreadCount());
 
-        ThreadInfo[] threads = threadMXBean.dumpAllThreads(true, true);
+        ThreadInfo[] threads = threadMXBean.dumpAllThreads(false, false);
         Map<String, List<GroupThreadInfo>> threadGroupInfo = new HashMap<>();
         for (ThreadInfo  t : threads) {
             String threadName = t.getThreadName();

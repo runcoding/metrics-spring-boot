@@ -5,6 +5,8 @@ Metrics Spring-boot Sqlite Aop method tps
  - 查看当前服务内存、线程运行情况。
  - 每小时定时统计接口调用(count、tps)情况。
  
+注意： 查看统计运行结果时，开启ManagementFactory.getThreadMXBean().dumpAllThreads(false, false);会降低服务性能。
+ 
 ## 使用
  ```xml
   <dependency>
