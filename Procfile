@@ -1,0 +1,1 @@
+web: java -jar monitor-spring-test/target/monitor-spring-test-1.0.0-SNAPSHOT.jar
