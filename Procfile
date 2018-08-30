@@ -1,1 +1,1 @@
-web: java -jar monitor-spring-test/target/monitor-spring-test-1.0.0-SNAPSHOT.jar
+web: java -jar monitor-spring/target/monitor-spring-0.0.1-SNAPSHOT.jar

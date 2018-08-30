@@ -23,10 +23,10 @@ spring.application.name = ## 数据文件名称，默认 monitor.db
 ## 查看统计
 run monitor-spring-test
 ### 时时查看JVM内存、线程、接口或服务调用次数 
-- 地址： http://localhost:8080/monitor/index.html
+- 地址： https://metrics-spring-boot.herokuapp.com/monitor/index.html
 ![](snapshot/monitor_index.png) 
 ### 查看每分钟接口调用速率均值(每小时统计一次)   
-- 地址： http://localhost:8080/monitor/metric.html
+- 地址： https://metrics-spring-boot.herokuapp.com//monitor/metric.html
 ![](snapshot/monitor_metric.png)
  
 

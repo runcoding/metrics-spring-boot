@@ -10,7 +10,6 @@
 
     <modules>
         <module>monitor-spring</module>
-        <module>monitor-spring-test</module>
     </modules>
 
 </project>

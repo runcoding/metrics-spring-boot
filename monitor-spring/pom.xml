@@ -16,8 +16,8 @@
     <description>系统监控</description>
 
     <properties>
+        <skipTests>true</skipTests>
         <metrics.version>3.2.3</metrics.version>
-        <start-class>com.runcoding.monitor.SampleSqliteApplication</start-class>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>4.3.13.RELEASE</spring.version>
@@ -108,6 +108,15 @@
                 </includes>
             </resource>
             <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.*</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+            <resource>
                 <directory>src/main/resources</directory>
                 <includes>
                     <include>**/*</include>
@@ -136,7 +145,16 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>1.4.1.RELEASE</version>
+                <configuration>
+                    <mainClass>com.runcoding.monitor.Application</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
