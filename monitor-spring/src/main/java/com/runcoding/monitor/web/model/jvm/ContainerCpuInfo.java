@@ -1,12 +1,18 @@
 package com.runcoding.monitor.web.model.jvm;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by xukai on 2017/7/28.
  * @desc 当前服务器cpu
  */
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ContainerCpuInfo {
 
     /**多核cpu时，编号*/
@@ -42,96 +48,4 @@ public class ContainerCpuInfo {
     /**总的使用率*/
     private double combined;
 
-    public int getCpuNum() {
-        return cpuNum;
-    }
-
-    public void setCpuNum(int cpuNum) {
-        this.cpuNum = cpuNum;
-    }
-
-    public int getMhz() {
-        return mhz;
-    }
-
-    public void setMhz(int mhz) {
-        this.mhz = mhz;
-    }
-
-    public String getVendor() {
-        return vendor;
-    }
-
-    public void setVendor(String vendor) {
-        this.vendor = vendor;
-    }
-
-    public String getModel() {
-        return model;
-    }
-
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public long getCacheSize() {
-        return cacheSize;
-    }
-
-    public void setCacheSize(long cacheSize) {
-        this.cacheSize = cacheSize;
-    }
-
-    public double getUser() {
-        return user;
-    }
-
-    public void setUser(double user) {
-        this.user = user;
-    }
-
-    public double getSys() {
-        return sys;
-    }
-
-    public void setSys(double sys) {
-        this.sys = sys;
-    }
-
-    public double getIdle() {
-        return idle;
-    }
-
-    public void setIdle(double idle) {
-        this.idle = idle;
-    }
-
-    public double getWait() {
-        return wait;
-    }
-
-    public void setWait(double wait) {
-        this.wait = wait;
-    }
-
-    public double getStolen() {
-        return stolen;
-    }
-
-    public void setStolen(double stolen) {
-        this.stolen = stolen;
-    }
-
-    public double getCombined() {
-        return combined;
-    }
-
-    public void setCombined(double combined) {
-        this.combined = combined;
-    }
-
-    @Override
-    public String toString() {
-        return JSON.toJSONString(this, SerializerFeature.PrettyFormat);
-    }
 }

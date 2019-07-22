@@ -31,7 +31,8 @@ public class MetricProcessor {
         for (Map.Entry<String, Timer> entrys : timers.entrySet()) {
             Timer timer = entrys.getValue();
             double mean = timer.getSnapshot().getMean()/1000000000;
-            methodApis.add(new MetricInfo(nowDate,entrys.getKey(), timer.getCount(), timer.getOneMinuteRate(),mean));
+            MetricInfo metricInfo = MetricInfo.builder().refDate(nowDate).name(entrys.getKey()).count(timer.getCount()).minuteRate(timer.getOneMinuteRate()).mean(mean).build();
+            methodApis.add(metricInfo);
             METRIC_REGISTRY.remove(entrys.getKey());
         }
         return methodApis;

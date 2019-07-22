@@ -4,7 +4,7 @@ import com.runcoding.monitor.support.jvm.JvmProcessor;
 import com.runcoding.monitor.support.metric.MetricProcessor;
 import com.runcoding.monitor.web.dao.MetricInfoMapper;
 import com.runcoding.monitor.web.model.endpoint.MonitorResp;
-import com.runcoding.monitor.web.model.jvm.ContainerJvmInfo;
+import com.runcoding.monitor.web.model.jvm.ContainerRunningInfo;
 import com.runcoding.monitor.web.model.metrics.MetricInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,9 +33,9 @@ public class MonitorController {
 
     @GetMapping(value = "/metrics_jvm" )
     @ResponseBody
-    public MonitorResp<ContainerJvmInfo> jvmInfo() {
-        ContainerJvmInfo jvmInfo = JvmProcessor.getContainerJvmInfo();
-        return  MonitorResp.success(jvmInfo);
+    public MonitorResp<ContainerRunningInfo> jvmInfo() {
+        ContainerRunningInfo containerRunningInfo = ContainerRunningInfo.buildContainerRunningInfo();
+        return  MonitorResp.success(containerRunningInfo);
     }
 
     @DeleteMapping(value = "/api_metrics_clear")

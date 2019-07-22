@@ -1,12 +1,13 @@
 package com.runcoding.monitor.support.jvm;
 
-import com.runcoding.monitor.web.model.jvm.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.runcoding.monitor.web.model.jvm.ContainerThreadInfo;
+import com.runcoding.monitor.web.model.jvm.GroupThreadInfo;
+import com.runcoding.monitor.web.model.jvm.MemoryInfo;
+import com.runcoding.monitor.web.model.jvm.OperatingSystemInfo;
+import org.assertj.core.util.Lists;
 
 import java.lang.management.*;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -21,64 +22,48 @@ public class JvmProcessor {
 
     private  static final long MB = 1024 * 1024;
 
-    private static Logger logger = LoggerFactory.getLogger(JvmProcessor.class);
-
-
-    private static String ip  ;
-
-    /**获取容器中jvm的信息*/
-    public static ContainerJvmInfo getContainerJvmInfo(){
-        ContainerJvmInfo jvmInfo = new ContainerJvmInfo();
-        /**系统信息*/
-        jvmInfo.setOperatingSystemInfo(getOperatingSystemInfo());
-        /**线程信息*/
-        jvmInfo.setContainerThreadInfo(getContainerThreadInfo());
-        /**内存信息*/
-        jvmInfo.setContainerMemoryInfo(getContainerMemoryInfo());
-        return jvmInfo;
-    }
-
     /**内存信息*/
     public static   List<MemoryInfo> getContainerMemoryInfo(){
-        List<MemoryInfo> infos =  new ArrayList<>();
+        List<MemoryInfo> memoryInfoList =  new ArrayList<>();
         MemoryMXBean memory    = ManagementFactory.getMemoryMXBean();
-        MemoryUsage headMemoryUsage = memory.getHeapMemoryUsage();
-        /**head堆*/
-        MemoryInfo headMemory = new MemoryInfo("head堆");
+        /**堆内存*/
+        MemoryInfo headMemory = memoryInfoBuild("堆内存",memory.getHeapMemoryUsage());
 
-        headMemory.setInit(headMemoryUsage.getInit()/MB);
-        headMemory.setMax(headMemoryUsage.getMax()/MB);
-        headMemory.setUsed(headMemoryUsage.getUsed()/MB);
-        headMemory.setCommitted(headMemoryUsage.getCommitted()/MB);
-        headMemory.setUsedRate(headMemoryUsage.getUsed()*100/headMemoryUsage.getCommitted());
-        infos.add(headMemory);
+        memoryInfoList.add(headMemory);
 
-        /**non-head非堆*/
-        MemoryInfo nonHeadMemory = new MemoryInfo("non-head堆");
-        MemoryUsage nonheadMemory = memory.getNonHeapMemoryUsage();
-        nonHeadMemory.setInit(nonheadMemory.getInit()/MB);
-        nonHeadMemory.setMax(nonheadMemory.getMax()/MB);
-        nonHeadMemory.setUsed(nonheadMemory.getUsed()/MB);
-        nonHeadMemory.setCommitted(nonheadMemory.getCommitted()/MB);
-        nonHeadMemory.setUsedRate(nonheadMemory.getUsed()*100/nonheadMemory.getCommitted());
-        infos.add(nonHeadMemory);
+        /**堆外内存*/
+        MemoryInfo nonHeadMemory =  memoryInfoBuild("堆外内存",memory.getNonHeapMemoryUsage());
+        memoryInfoList.add(nonHeadMemory);
         /**vm各内存区信息*/
         List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
         if(pools == null ){
-            return infos;
+            return memoryInfoList;
         }
         for(MemoryPoolMXBean pool : pools){
-            /**只打印一些各个内存区都有的属性，一些区的特殊属性，可看文档 */
-            MemoryInfo poolMemory = new MemoryInfo(pool.getName());
             MemoryUsage usage = pool.getUsage();
-            poolMemory.setInit(usage.getInit()/MB);
-            poolMemory.setMax(usage.getMax()/MB);
-            poolMemory.setUsed(usage.getUsed()/MB);
-            poolMemory.setCommitted(usage.getCommitted()/MB);
-            poolMemory.setUsedRate(usage.getUsed()*100/usage.getCommitted());
-            infos.add(poolMemory);
+            /**只打印一些各个内存区都有的属性，一些区的特殊属性，可看文档 */
+            MemoryInfo poolMemory = MemoryInfo.builder()
+                    .name(pool.getName())
+                    .init(usage.getInit()/MB)
+                    .max(usage.getMax()/MB)
+                    .used(usage.getUsed()/MB)
+                    .committed(usage.getCommitted()/MB)
+                    .usedRate(usage.getUsed()*100/usage.getCommitted())
+                    .build();
+            memoryInfoList.add(poolMemory);
         }
-        return infos;
+        return memoryInfoList;
+    }
+
+    private static MemoryInfo memoryInfoBuild(String name ,MemoryUsage headMemoryUsage) {
+        return MemoryInfo.builder()
+                .name(name)
+                .init(headMemoryUsage.getInit()/MB)
+                .max(headMemoryUsage.getMax()/MB)
+                .used(headMemoryUsage.getUsed()/MB)
+                .committed(headMemoryUsage.getCommitted()/MB)
+                .usedRate(headMemoryUsage.getUsed()*100/headMemoryUsage.getCommitted())
+                .build();
     }
 
     /**线程信息*/
@@ -89,38 +74,87 @@ public class JvmProcessor {
         info.setPeakThreadCount(threadMXBean.getPeakThreadCount());
         info.setTotalStartedThreadCount(threadMXBean.getTotalStartedThreadCount());
         info.setDaemonThreadCount(threadMXBean.getDaemonThreadCount());
-
-        ThreadInfo[] threads = threadMXBean.dumpAllThreads(false, false);
-        Map<String, List<GroupThreadInfo>> threadGroupInfo = new HashMap<>();
-        for (ThreadInfo  t : threads) {
-            String threadName = t.getThreadName();
-            String[] split    = threadName.split("-");
-            String groupName  = split[0];
-            if(groupName.length() == threadName.length()){
-                groupName  = threadName.split("_")[0];
-            }
-            if(groupName.length() == threadName.length()){
-                groupName  = threadName.split("#")[0];
-            }
-            if(groupName.length() == threadName.length()){
-                groupName  = threadName.split(" ")[0];
-            }
-            List<GroupThreadInfo> groupNames = threadGroupInfo.get(groupName);
-            if(groupNames == null){
-                groupNames  = new ArrayList<>();
-            }
-            groupNames.add(new GroupThreadInfo(t.getThreadName(),t.getThreadId(),t.getThreadState()));
-            threadGroupInfo.put(groupName,groupNames);
-        }
-        info.setThreadGroupInfo(threadGroupInfo);
+        info.setThreadGroupInfo(getThreadGroupInfo());
         return info;
     }
 
+    public static Map<String, List<GroupThreadInfo>> getThreadGroupInfo(){
+        Map<String, List<GroupThreadInfo>> threadGroupInfo = new HashMap<>();
+        ThreadGroup root =ThreadUtil.getRoot();
+        Thread[] threads = new Thread[root.activeCount()];
+        while (root.enumerate(threads, true) == threads.length) {
+            threads = new Thread[threads.length * 2];
+        }
+        for (Thread thread : threads) {
+            if (thread == null) {
+                continue;
+            }
+            String  threadName = thread.getName();
+            long      threadId = thread.getId();
+            Thread.State state = thread.getState();
+            buildThreadInfo(threadGroupInfo, threadName, threadId, state);
+        }
+        return threadGroupInfo;
+    }
+
+
+    /**获取堆栈信息相当于jstack,注意会影响服务运行的性能*/
+    @Deprecated
+    public static Map<String, List<GroupThreadInfo>> getThreadGroupInfo(ThreadMXBean threadMXBean,boolean isDumpAllThread) {
+        ThreadInfo[] threads = {};
+        if(isDumpAllThread){
+            threads = threadMXBean.dumpAllThreads(false, false);
+        }
+        Map<String, List<GroupThreadInfo>> threadGroupInfo = new HashMap<>();
+        for (ThreadInfo  t : threads) {
+            String    threadName = t.getThreadName();
+            long        threadId = t.getThreadId();
+            Thread.State   state = t.getThreadState();
+            buildThreadInfo(threadGroupInfo, threadName, threadId, state);
+        }
+        return threadGroupInfo;
+    }
+
+    private static void buildThreadInfo(Map<String, List<GroupThreadInfo>> threadGroupInfo,
+                                        String threadName, long threadId,
+                                        Thread.State threadState) {
+        String[] split    = threadName.split("-");
+        String groupName  = split[0];
+        if(groupName.length() == threadName.length()){
+            groupName  = threadName.split("_")[0];
+        }
+        if(groupName.length() == threadName.length()){
+            groupName  = threadName.split("#")[0];
+        }
+        if(groupName.length() == threadName.length()){
+            groupName  = threadName.split(" ")[0];
+        }
+        List<GroupThreadInfo> groupNames = threadGroupInfo.getOrDefault(groupName, Lists.newArrayList());
+        groupNames.add(new GroupThreadInfo(threadName,threadId,threadState));
+        threadGroupInfo.put(groupName,groupNames);
+    }
+
+    /**当前运行系统名称*/
+    public static String getRunName(){
+        String runInfo = ManagementFactory.getRuntimeMXBean().getName();
+        String[] runInfoName = runInfo.split("@");
+        return  runInfoName.length >0 ? runInfoName[1] : "user";
+    }
+
+    /**当前运行系统名称*/
+    public static String getRunPid(){
+        String runInfo = ManagementFactory.getRuntimeMXBean().getName();
+        String[] runInfoName = runInfo.split("@");
+        return  runInfoName[0];
+    }
 
     /**系统信息*/
     public static OperatingSystemInfo getOperatingSystemInfo(){
 
         OperatingSystemInfo systemInfo = new OperatingSystemInfo();
+
+        systemInfo.setRunName(getRunName());
+        systemInfo.setRunPid(getRunPid());
 
         OperatingSystemMXBean system = ManagementFactory.getOperatingSystemMXBean();
 
@@ -128,56 +162,37 @@ public class JvmProcessor {
         systemInfo.setVersion(system.getVersion());
         systemInfo.setArch(system.getArch());
         systemInfo.setAvailableProcessors(system.getAvailableProcessors());
-        systemInfo.setIp(getIp());
 
-        long totalPhysicalMemory = getLongFromOperatingSystem(system,"getTotalPhysicalMemorySize");
-        long freePhysicalMemory = getLongFromOperatingSystem(system, "getFreePhysicalMemorySize");
+        systemInfo.setIp(getIp());
+        systemInfo.setSystemLoadAverage(system.getSystemLoadAverage());
+
+        Runtime runtime = Runtime.getRuntime();
+
+        long totalPhysicalMemory = runtime.totalMemory();
+        long freePhysicalMemory  = runtime.freeMemory();
         long usedPhysicalMemorySize =totalPhysicalMemory - freePhysicalMemory;
 
         systemInfo.setTotalPhysicalMemory(totalPhysicalMemory/MB);
         systemInfo.setUsedPhysicalMemorySize(usedPhysicalMemorySize/MB);
         systemInfo.setFreePhysicalMemory(freePhysicalMemory/MB);
 
-        long  totalSwapSpaceSize = getLongFromOperatingSystem(system, "getTotalSwapSpaceSize");
-        long freeSwapSpaceSize = getLongFromOperatingSystem(system, "getFreeSwapSpaceSize");
-        long usedSwapSpaceSize = totalSwapSpaceSize - freeSwapSpaceSize;
+
+        long totalSwapSpaceSize = 0;
+        long freeSwapSpaceSize  = 0;
+        long usedSwapSpaceSize  = totalSwapSpaceSize - freeSwapSpaceSize;
 
         systemInfo.setTotalSwapSpaceSize(totalSwapSpaceSize/MB);
         systemInfo.setUsedSwapSpaceSize(usedSwapSpaceSize/MB);
         systemInfo.setFreeSwapSpaceSize(freeSwapSpaceSize/MB);
-
         return systemInfo;
     }
 
     /**获取ip*/
     public static String getIp() {
         try {
-            if(ip == null){
-                ip = InetAddress.getLocalHost().getHostAddress().toString();
-            }
-            return ip;
+            return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
             return   "127.0.0.1";
-        }
-    }
-
-    private static long getLongFromOperatingSystem(OperatingSystemMXBean operatingSystem, String methodName) {
-        try {
-            final Method method = operatingSystem.getClass().getMethod(methodName,
-                    (Class<?>[]) null);
-            method.setAccessible(true);
-            return (Long) method.invoke(operatingSystem, (Object[]) null);
-        } catch (final InvocationTargetException e) {
-            if (e.getCause() instanceof Error) {
-                throw (Error) e.getCause();
-            } else if (e.getCause() instanceof RuntimeException) {
-                throw (RuntimeException) e.getCause();
-            }
-            throw new IllegalStateException(e.getCause());
-        } catch (final NoSuchMethodException e) {
-            throw new IllegalArgumentException(e);
-        } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(e);
         }
     }
 }

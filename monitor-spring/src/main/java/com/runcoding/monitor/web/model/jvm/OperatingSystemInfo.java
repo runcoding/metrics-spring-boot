@@ -1,13 +1,25 @@
 package com.runcoding.monitor.web.model.jvm;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by xukai on 2017/7/27.
  * jvm 获取当前操作系统信息
  */
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class OperatingSystemInfo {
+
+    /**运行用户名字*/
+    private String runName;
+
+    /**运行的pid*/
+    private String runPid;
 
     /**系统名称*/
     private    String  name;
@@ -23,6 +35,13 @@ public class OperatingSystemInfo {
 
     /**可用的内核数*/
     private long availableProcessors;
+
+    /**
+     * 最后一分钟内系统加载平均值。
+     * 系统加载平均值是排队到可用处理器的可运行实体数目与可用处理器上可运行实体数目的总和在某一段时间进行平均的结果。
+     * 计算加载平均值的方式是特定于操作系统的，但通常是衰减的与时间相关的平均值。
+     * */
+    private double systemLoadAverage;
 
     /**总物理内存(M)*/
     private long totalPhysicalMemory;
@@ -42,96 +61,5 @@ public class OperatingSystemInfo {
     /**剩余交换空间(M)*/
     private long freeSwapSpaceSize;
 
-    public String getName() {
-        return name;
-    }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getArch() {
-        return arch;
-    }
-
-    public void setArch(String arch) {
-        this.arch = arch;
-    }
-
-    public long getAvailableProcessors() {
-        return availableProcessors;
-    }
-
-    public void setAvailableProcessors(long availableProcessors) {
-        this.availableProcessors = availableProcessors;
-    }
-
-    public long getTotalPhysicalMemory() {
-        return totalPhysicalMemory;
-    }
-
-    public void setTotalPhysicalMemory(long totalPhysicalMemory) {
-        this.totalPhysicalMemory = totalPhysicalMemory;
-    }
-
-    public long getUsedPhysicalMemorySize() {
-        return usedPhysicalMemorySize;
-    }
-
-    public void setUsedPhysicalMemorySize(long usedPhysicalMemorySize) {
-        this.usedPhysicalMemorySize = usedPhysicalMemorySize;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public long getFreePhysicalMemory() {
-        return freePhysicalMemory;
-    }
-
-    public void setFreePhysicalMemory(long freePhysicalMemory) {
-        this.freePhysicalMemory = freePhysicalMemory;
-    }
-
-    public long getTotalSwapSpaceSize() {
-        return totalSwapSpaceSize;
-    }
-
-    public void setTotalSwapSpaceSize(long totalSwapSpaceSize) {
-        this.totalSwapSpaceSize = totalSwapSpaceSize;
-    }
-
-    public long getUsedSwapSpaceSize() {
-        return usedSwapSpaceSize;
-    }
-
-    public void setUsedSwapSpaceSize(long usedSwapSpaceSize) {
-        this.usedSwapSpaceSize = usedSwapSpaceSize;
-    }
-
-    public long getFreeSwapSpaceSize() {
-        return freeSwapSpaceSize;
-    }
-
-    public void setFreeSwapSpaceSize(long freeSwapSpaceSize) {
-        this.freeSwapSpaceSize = freeSwapSpaceSize;
-    }
-
-    @Override
-    public String toString() {
-        return JSON.toJSONString(this, SerializerFeature.PrettyFormat);
-    }
 }

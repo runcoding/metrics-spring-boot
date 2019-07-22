@@ -1,12 +1,18 @@
 package com.runcoding.monitor.web.model.jvm;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by xukai on 2017/7/27.
  * 线程信息
  */
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GroupThreadInfo {
 
     /**线程名称*/
@@ -18,41 +24,5 @@ public class GroupThreadInfo {
     /**线程的状态*/
     private  Thread.State threadState;
 
-    public GroupThreadInfo() {
-    }
 
-    public GroupThreadInfo(String threadName, long threadId, Thread.State threadState) {
-        this.threadName = threadName;
-        this.threadId = threadId;
-        this.threadState = threadState;
-    }
-
-    public String getThreadName() {
-        return threadName;
-    }
-
-    public void setThreadName(String threadName) {
-        this.threadName = threadName;
-    }
-
-    public long getThreadId() {
-        return threadId;
-    }
-
-    public void setThreadId(long threadId) {
-        this.threadId = threadId;
-    }
-
-    public Thread.State getThreadState() {
-        return threadState;
-    }
-
-    public void setThreadState(Thread.State threadState) {
-        this.threadState = threadState;
-    }
-
-    @Override
-    public String toString() {
-        return JSON.toJSONString(this, SerializerFeature.PrettyFormat);
-    }
 }
