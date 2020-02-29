@@ -1,0 +1,26 @@
+<div class="am-g am-text-center">
+    <button type="button" class="am-btn-sm am-btn-success" onclick="refresh()">刷新Spring Config配置</button>
+</div>
+
+
+<div class="am-g ">
+    <div class="am-u-sm-12">
+        <table class="am-table  am-text-center am-text-nowrap am-scrollable-horizonta" >
+            <thead>
+            <tr>
+                <th >服务实例</th>
+                <th >状态</th>
+                <th >更新信息</th>
+            </tr>
+            </thead>
+            <tbody id="tbody_metric" > </tbody>
+            <script  type="text/html" id="tpl_metric_tr">
+                <tr>
+                    <td>{{hostPort}}</td>
+                    <td>{{hostStatus}}</td>
+                    <td>{{changeKey}}</td>
+                </tr>
+            </script>
+        </table>
+    </div>
+</div>

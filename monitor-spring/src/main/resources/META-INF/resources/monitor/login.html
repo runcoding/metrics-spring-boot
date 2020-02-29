@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ZH">
+<head>
+    <title>服务监控</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.min.css" />
+    <link rel="stylesheet" href="/dist/css/login.css">
+    <script>
+        String.prototype.replaceAll = function(s1,s2){
+            return this.replace(new RegExp(s1,"gm"),s2);
+        }
+        var serverHost = window.location.href.replaceAll("/monitor/login.html","");
+            serverHost = serverHost.split("?")[0];
+        (function () {
+
+            var JQ_COM_API = window.JQ_COM_API = {};
+            /**
+             * ajax json 请求
+             * */
+            JQ_COM_API.requestByJson = function(req,fun){
+                fun.success = fun.success ||  function(req){console.log('获取成功')};
+                fun.cancel  = fun.cancel  ||  function(req){console.log('操作取消')};
+                fun.fail    = fun.fail    ||  function(req){console.log('操作失败')};
+                $.ajax({
+                    url:         serverHost + req.url ,
+                    type:        req.method      || "POST",
+                    contentType: req.contentType || 'application/json',
+                    dataType:    req.dataType    || "json",
+                    async:       req.async == null ? true : req.async,
+                    timeout:     req.timeout     || 60000,
+                    data:        req.data        || {},
+                    success: function (data) {
+                        var code  = data.status;
+                        //console.log("请求返回code："+code);
+                        if( code == 200){
+                            fun.success(req,data);
+                        } else{
+                            fun.fail(req,data);
+                        }
+                    },
+                    error: function(xhr, type){
+                        fun.fail(req,null);
+                    }
+                })
+            }
+            /**获取请求参数*/
+            JQ_COM_API.getQueryParam = function () {
+                /**获取url中"?"符后的字串*/
+                var url = location.search;
+                var theRequest = new Object();
+                if (url.indexOf("?") != -1) {
+                    var str = url.substr(1);
+                    var arr = str.split("&");
+                    for(var i = 0; i < arr.length; i ++) {
+                        var obj = arr[i].split("=");
+                        theRequest[obj[0]] = decodeURIComponent(obj[1]);
+                    }
+                }
+                return theRequest;
+            }
+
+        })()
+    </script>
+</head>
+<body data-type="login" class="theme-white" >
+<div class="am-g tpl-g">
+    <div class="tpl-login">
+        <div class="tpl-login-content">
+            <div class="tpl-login-logo">
+            </div>
+            <form class="am-form tpl-form-line-form">
+                <div class="am-form-group">
+                    <input type="text" class="tpl-form-input" id="username" placeholder="请输入账号">
+                </div>
+                <div class="am-form-group">
+                    <input type="password" class="tpl-form-input" id="password" placeholder="请输入密码">
+                </div>
+                <div class="am-form-group">
+                    <button type="button" class="am-btn am-btn-primary  am-btn-block tpl-btn-bg-color-success  tpl-login-btn">登录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.bootcss.com/moment.js/2.19.0/moment.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery/2.1.0/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/amazeui/2.7.2/js/amazeui.min.js"></script>
+<script>
+
+
+    var  param = JQ_COM_API.getQueryParam();
+
+    $(function () {
+        $(".tpl-login-btn").click(function () {
+            if(!window.sessionStorage){
+                alert('浏览器暂不支持登录,推荐使用chrome浏览器');
+                return;
+            }
+
+            /**请求服务跳转*/
+            JQ_COM_API.requestByJson({
+                url:  "/security/admin/login",
+                data:JSON.stringify({
+                    username:$('#username').val(),
+                    password:$('#password').val()
+                })
+            },{
+                success:function(req,data){
+                    if(data.status == 200 ){
+                        console.log(" data.data"+ data.data)
+                        sessionStorage.setItem('security_authorization', data.data);
+                        window.location.href =   serverHost+'/monitor/index.html';
+                    }else{
+                        alert("登录失败");
+                    }
+                },
+                fail: function(req,data){
+                    $(".submit-btn").button('reset');
+                    alert("登录失败");
+                }
+            })
+        })
+    })
+
+</script>
+</body>
+</html>

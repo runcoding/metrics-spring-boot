@@ -1,0 +1,70 @@
+<style>
+    canvas{
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+</style>
+
+<div class="am-g ">
+    监控:
+    <select id="select_server_ip" data-am-selected><option value="all" selected>全部服务</option></select>
+    <button type="button" class="am-btn-sm am-btn-success am-radius am-round autoGetSysInfo" onclick="autoGetSysInfo()">自动(3s)刷新</button>
+</div>
+<iv class="am-g ">
+    哨兵(Sentinel)监控:
+    <select id="select_sentinel_monitor" data-am-selected><option value="all" selected>全部方法</option></select>
+</iv>
+<div>
+    获取当前运行线程状态:
+    <button type="button" class="am-btn-sm am-btn-default am-radius am-round dumpAllThreads" onclick="dumpAllThreads()">全部线程</button>
+</div>
+<div class="am-g">
+    <div class="am-btn-group-sm">
+        视图显示管理:
+        <button type="button" class="am-btn-sm am-btn-success am-radius am-round"
+                onclick="toggleCanvasShow('canvas_method_metric',this)">Sentinel方法</button>
+
+        <button type="button" class="am-btn-sm am-btn-success am-radius am-round"
+                onclick="toggleCanvasShow('canvas_method_thread',this)">方法执行线程</button>
+
+        <button type="button" class="am-btn-sm am-btn-success am-radius am-round"
+                onclick="toggleCanvasShow('canvas_thread',this)">服务线程</button>
+
+        <button type="button" class="am-btn-sm am-btn-success am-radius am-round"
+                onclick="toggleCanvasShow('canvas_memory',this)">服务内存</button>
+
+    </div>
+</div>
+<div class="am-g">
+    <div class="am-u-sm-8 canvas_table" >
+        <canvas id="canvas_method_metric"></canvas>
+        <canvas id="canvas_method_thread"></canvas>
+        <canvas id="canvas_thread"></canvas>
+        <canvas id="canvas_memory"></canvas>
+    </div>
+    <div class="am-u-sm-4" id="sys_info">
+        <table class="am-table am-text-nowrap am-scrollable-horizonta">
+            <thead>
+            <tr><th>服务信息</th></tr>
+            </thead>
+            <tbody id="tbody_sys_info"></tbody>
+        </table>
+    </div>
+    <div>
+        <table class="am-table ">
+            <thead>
+            <tr>
+                <th>内存区域</th>
+                <th>初始(M)</th>
+                <th>上限(M)</th>
+                <th>已使用(M)</th>
+                <th>已申请(M)</th>
+                <th>使用率(%)</th>
+            </tr>
+            </thead>
+            <tbody id="tbody_memory_info"></tbody>
+        </table>
+    </div>
+</div>
+

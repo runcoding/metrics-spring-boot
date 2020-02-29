@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: monitor-center
+    alias: Monitor中心
+
+

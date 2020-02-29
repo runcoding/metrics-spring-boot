@@ -3,52 +3,66 @@
 <mapper namespace="com.runcoding.monitor.web.dao.MetricInfoMapper">
     
 
-    <select id="findMetricInfo" resultType="com.runcoding.monitor.web.model.metrics.MetricInfo">
-        SELECT
-        id,
-        refDate,
-        name,
-        count,
-        minuteRate,
-        mean
-        FROM
-        metric_info
-        <if test="orderType == 0" >
-            ORDER BY  mean DESC
-        </if>
-        <if test="orderType == 1" >
-            ORDER BY  minuteRate DESC
-        </if>
-        <if test="orderType == 2" >
-            ORDER BY  count DESC
-        </if>
-        <if test="orderType == 3" >
-            ORDER BY  id DESC
-        </if>
-        limit 200
+    <select id="findMetricInfo" resultType="com.runcoding.monitor.web.model.metrics.MethodMetricInfo">
+     SELECT
+          id,
+          refDate,
+          name,
+          cntRequest,
+          cntPassRequest,
+          cntSuccessRequest,
+          cntExceptionRequest,
+          cntBlockRequest,
+          avgRt,
+          tardiness
+     FROM
+       metric_info
+     <if test="orderType == 0" >
+         ORDER BY  tardiness DESC
+     </if>
+     <if test="orderType == 1" >
+         ORDER BY  avgRt DESC
+     </if>
+     <if test="orderType == 2" >
+        ORDER BY  cntRequest DESC
+     </if>
+     <if test="orderType == 3" >
+         ORDER BY  id DESC
+     </if>
+     limit 200
     </select>
 
-    <insert id="insert" keyProperty="id" parameterType="com.runcoding.monitor.web.model.metrics.MetricInfo"
+    <insert id="insert" keyProperty="id" parameterType="com.runcoding.monitor.web.model.metrics.MethodMetricInfo"
             useGeneratedKeys="true">
         INSERT INTO  "metric_info" (
-            "refDate",
-            "name",
-            "count",
-            "minuteRate",
-            "mean"
+              refDate,
+              name,
+              cntRequest,
+              cntPassRequest,
+              cntSuccessRequest,
+              cntExceptionRequest,
+              cntBlockRequest,
+              avgRt,
+              tardiness
         )
         VALUES
             (
                 #{refDate},
                 #{name},
-                #{count},
-                #{minuteRate},
-                #{mean}
+                #{cntRequest},
+                #{cntPassRequest},
+                #{cntSuccessRequest},
+                #{cntExceptionRequest},
+                #{cntBlockRequest},
+                #{avgRt},
+                #{tardiness}
             )
     </insert>
 
     <delete id="delete">
         DELETE FROM metric_info where  refDate  <![CDATA[<=  #{delDate}]]>
     </delete>
+
+    <update id="vacuum">VACUUM</update>
 
 </mapper>

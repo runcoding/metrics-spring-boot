@@ -1,0 +1,13 @@
+- [首页]({{baseDomain}}/monitor/index.html)
+- 监控
+  - [实时监控]({{baseDomain}}/monitor/index.html?module=current/current#/)
+  - [CPU TOP 10]({{baseDomain}}/monitor/index.html?module=current/cpu#/) 
+  - [过去每小时]({{baseDomain}}/monitor/index.html?module=metric/metric#/)
+- [Sentinel配置]({{baseDomain}}/monitor/index.html?#/monitor/wiki/monitor/sentinel_config)
+  - [系统规则]({{baseDomain}}/monitor/index.html?module=sentinel/sentinel&sentinelRule=systemRules#/)
+  - [流控规则]({{baseDomain}}/monitor/index.html?module=sentinel/sentinel&sentinelRule=flowRules#/)
+  - [降级规则]({{baseDomain}}/monitor/index.html?module=sentinel/sentinel&sentinelRule=degradeRules#/)
+- 方法黑白名单
+  - [白名单]({{baseDomain}}/monitor/index.html?module=sentinel/sentinel&sentinelRule=authorityWhite#/)
+  - [黑名单]({{baseDomain}}/monitor/index.html?module=sentinel/sentinel&sentinelRule=authorityBlock#/)
+- [刷新配置]({{baseDomain}}/monitor/index.html?module=refresh/refresh#/)

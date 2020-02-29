@@ -19,20 +19,18 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 /**
- * @author: xukai
+ * @author: runcoding
  * @email: runcoding@163.com
- * @created Time: 2018/03/25 21:07
+ * @created Time: 2019/07/25 21:07
  * @description sqlite初始化
- *
+ * Copyright (C),
  **/
 @Configuration
 public class DBInitializeConfig {
 
 	private Logger logger = LoggerFactory.getLogger(DBInitializeConfig.class);
 
-	/**
-	 * 初始化脚步存放路径
-	 */
+	/**初始化脚步存放路径*/
 	@Value("${runcoding.monitor.sqlite.store_schema_path:/store/schema.sql}")
 	private  String store_schema_path ;
 

@@ -1,0 +1,33 @@
+.markdown-section {
+    padding: 5px 15px 40px;
+}
+.markdown-section ul {
+    margin: 0.1em 0;
+}
+.markdown-section td, .markdown-section th {
+    border: 1px solid #ddd;
+    padding: 1px 10px;
+}
+.markdown-section a {
+    color: #3658b9;
+    font-weight: 500;
+    text-decoration:none;
+}
+.markdown-section p {
+
+}
+.markdown-section figure, .markdown-section ol, .markdown-section p, .markdown-section ul {
+     margin: 0.1em 0;
+}
+
+.text-success {
+    color: #09b92b;
+}
+
+.text-danger {
+    color: #dd100b;
+}
+
+.text-warning {
+    color: #f38905;
+}

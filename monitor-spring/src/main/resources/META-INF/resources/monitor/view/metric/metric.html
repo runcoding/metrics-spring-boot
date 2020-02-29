@@ -1,0 +1,45 @@
+<div class="am-g am-text-center">
+    <select name="orderType" id="orderType" data-am-selected >
+        <option value="0" selected>最慢耗时</option>
+        <option value="1" >RT时间(秒)</option>
+        <option value="2" >请求次数</option>
+        <option value="3" >记录日期</option>
+    </select>
+    <button type="button" class="am-btn-sm am-btn-success" onclick="getMetric()">刷新</button>
+    <button type="button" class="am-btn-sm am-btn-default" onclick="manualControlMetric()">手动刷取(近小时)结果</button>
+</div>
+
+
+<div class="am-g ">
+    <div class="am-u-sm-12 ">
+        <table class="am-table  am-text-center am-text-nowrap am-scrollable-horizonta" >
+            <thead>
+            <tr>
+                <th >统计近一小时</th>
+                <th >调用接口</th>
+                <th >最慢耗时(大于0.5秒)</th>
+                <th >RT时间(秒)</th>
+                <th >请求次数</th>
+                <th >通过次数</th>
+                <th >成功次数</th>
+                <th >异常次数</th>
+                <th >被阻塞次数</th>
+            </tr>
+            </thead>
+            <tbody id="tbody_metric" > </tbody>
+            <script  type="text/html" id="tpl_metric_tr">
+                <tr>
+                    <td>{{refDate}}</td>
+                    <td>{{name}}</td>
+                    <td>{{tardiness}}</td>
+                    <td>{{avgRt}}</td>
+                    <td>{{cntRequest}}</td>
+                    <td>{{cntPassRequest}}</td>
+                    <td>{{cntSuccessRequest}}</td>
+                    <td>{{cntExceptionRequest}}</td>
+                    <td>{{cntBlockRequest}}</td>
+                </tr>
+            </script>
+        </table>
+    </div>
+</div>

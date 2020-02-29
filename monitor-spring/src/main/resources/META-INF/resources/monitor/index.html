@@ -1,597 +1,259 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh">
 <head>
-	<meta charset="utf-8" />
-	<title>服务监控</title> 
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <title>服务监控中心</title>
+    <meta name="description" content="服务监控中心">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="/dist/docsify/themes/vue.css">
     <link rel="stylesheet" href="https://cdn.bootcss.com/amazeui/2.7.2/css/amazeui.min.css" />
-    <script src="https://cdn.bootcss.com/Chart.js/2.7.0/Chart.min.js"></script>
-    <script src="https://cdn.bootcss.com/moment.js/2.19.0/moment.min.js"></script>
-    <script src="https://cdn.bootcss.com/jquery/2.1.0/jquery.min.js"></script>
-    <script src="https://cdn.bootcss.com/amazeui/2.7.2/js/amazeui.min.js"></script>
+    <link rel="stylesheet" href="/dist/json/jsoneditor.min.css">
+    <link rel="icon" type="image/png" href="/dist/docsify/media/favicon.ico">
     <style>
-        canvas{
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-        } 
-    </style>
-    <script>
-        (function () {
-            String.prototype.replaceAll = function(s1,s2){
-                return this.replace(new RegExp(s1,"gm"),s2);
-            }
-            var serverHost = window.location.href.replaceAll("monitor/index.html","");
-                serverHost = serverHost.split("?")[0];
+        .markdown-section {
+          padding: 10px 15px 40px;
+          max-width: 100%;
+        }
+        .markdown-section ul {
+           margin: 0.2em 0;
+        }
+        .markdown-section td, .markdown-section th {
+          border: 1px solid #ddd;
+          padding: 1px 10px;
+        }
+        .markdown-section a {
+          color: #42b983;
+          font-weight: 500;
+          text-decoration:none;
+        }
+        .sidebar {
+            width: 180px
+         }
+  </style>
+</head>
+<body onload="">
+<div id="app">正在加载……</div>
+<script type="text/javascript" src="/dist/mermaid/mermaid.js" ></script>
+<script src="/dist/json/json-to-table.js"></script>
+<script>
+    String.prototype.replaceAll = function(s1,s2){
+        return this.replace(new RegExp(s1,"gm"),s2);
+    }
+    var  baseDomain  = window.location.href.split("#")[0].replaceAll("monitor/index.html","");
+         baseDomain  = baseDomain.split("?")[0].replaceAll("monitor/index.html","");
 
-            var JQ_COM_API = window.JQ_COM_API = {};
-            /**
-             * ajax json 请求
-             * */
-            JQ_COM_API.requestByJson = function(req,fun){
-                console.log("serverHost="+serverHost+",req.url="+req.url)
-                fun.success = fun.success ||  function(req){console.log('获取成功')};
-                fun.cancel  = fun.cancel  ||  function(req){console.log('操作取消')};
-                fun.fail    = fun.fail    ||  function(req){console.log('操作失败')};
-                $.ajax({
-                    url:         serverHost + req.url ,
-                    type:        req.method      || "POST",
-                    contentType: req.contentType || 'application/json',
-                    dataType:    req.dataType    || "json",
-                    async:       req.async == null ? true : req.async,
-                    timeout:     req.timeout     || 60000,
-                    data:        req.data        || {},
-                    success: function (data) {
-                        var code  = data.status;
-                        //console.log("请求返回code："+code);
-                        if( code == 200){
-                            fun.success(req,data);
-                        } else{
-                            fun.fail(req,data);
+    var  staticDomain =  window.location.host == "localhost:8080" ? baseDomain : "/dist/";
+
+    function getQueryParam () {
+        /**获取url中"?"符后的字串*/
+        var url = location.search;
+        var theRequest = new Object();
+        if (url.indexOf("?") != -1) {
+            var str = url.substr(1);
+            var arr = str.split("&");
+            for(var i = 0; i < arr.length; i ++) {
+                var obj = arr[i].split("=");
+                theRequest[obj[0]] = decodeURIComponent(obj[1]);
+            }
+        }
+        return theRequest;
+    }
+    localStorage.clear();
+    /**自定义菜单*/
+    var  modelSidebar = getQueryParam().sidebar || 'monitor';
+
+    var sidebar  =  "wiki/sidebar";
+    var homepage =  "wiki/home.md";
+
+    if(modelSidebar){
+        sidebar   = modelSidebar + "/" + sidebar+".md";
+        homepage  = modelSidebar + "/" + homepage;
+    }
+
+    /**指定打开文件*/
+    homepage = getQueryParam().open || homepage;
+    window.$docsify = {
+        el: '#app',                //初始化的挂载元素
+        name: '服务监控中心',        //文档标题，会显示在侧边栏顶部。
+        nameLink: "monitor/index.html",         //点击文档标题后跳转的链接地址。{nameLink:{'/zh-cn/':'/zh-cn/','/':'/'}}
+        loadSidebar: sidebar,      //加载自定义侧边栏， loadSidebar:true时，默认加载_sidebar.md(指定加载 loadSidebar:summary.md)
+        subMaxLevel: 8,         //自定义侧边栏后默认不会再生成目录，你也可以通过设置生成目录的最大层级开启这个功能。默认subMaxLevel: 0
+        loadNavbar: false,       //加载自定义导航栏, loadNavbar: true时，默认加载 _navbar.md(或指定文件加载loadNavbar: 'nav.md')
+        maxLevel: 8,            //默认情况下会抓取文档中所有标题渲染成目录，可配置最大支持渲染的标题层级。
+        // coverpage: "cover/cover_page.md",        //开启文档封面页，默认加载 _coverpage.md 文件，可coverpage: 'cover.md'指定具体文件。
+        auto2top: true,         //切换页面后是否自动跳转到页面顶部。默认值: false
+        homepage: staticDomain+homepage,    //项目入口地址。默认README.md，
+        basePath: staticDomain,    //文档加载的根路径，可以是二级路径或者是其他域名的路径。
+        repo: '',               //显示gihub开源项目地址。
+        // themeColor: '#3F51B5',  //替换主题色。利用 CSS3 支持变量的特性，对于老的浏览器有 polyfill 处理。
+        autoHeader: true,//同时设置 loadSidebar 和 autoHeader 后,同时设置 loadSidebar 和 autoHeader 后，可以根据 _sidebar.md 的内容自动为每个页面增加标题。
+        executeScript: true,    //执行文档里的 script 标签里的脚本，只执行第一个 script (demo)。 如果 Vue 存在，则自动开启。
+        noEmoji: false,          //禁用 emoji 解析。禁止后不能插入表情😊 https://www.webfx.com/tools/emoji-cheat-sheet/
+        mergeNavbar: true,      //小屏设备下合并导航栏到侧边栏。
+        formatUpdated: '{YYYY}/{MM}/{DD} {HH}:{mm}',//显示文档更新日期
+        externalLinkTarget: '_self', // default: '_blank'
+        ga: 'UA-107590401-1',
+        themeColor: '#1bb58b',
+        notFoundPage: 'monitor/wiki/404.md',
+        markdown: {
+            renderer: {
+                code: function(code, lang) {
+                    var jsonEdit = '';
+                    if(lang == 'json'){
+                       try{
+                            JSON.parse(code);
+                            var key = new Date().getTime();
+                            localStorage.setItem(key,code);
+                            jsonEdit = '<a href="/dist/json/json.html?jsonStr='+key+'">编辑</a>';
+                        } catch(e) {
+                        } 
+                    }
+                    if(lang == 'json2table'){
+                        try{
+                            code = JSON.parse(code);
+                        } catch(e) {
+                            try{
+                               code = eval("("+ code +")");
+                            }catch(e2) {
+                               code = [{"<span style='color: #ffa666'>请检查下面的json存在语法错误</span>":code}]
+                            }
                         }
-                    },
-                    error: function(xhr, type){
-                        fun.fail(req,null);
+                        return json2table(code,'');;
+                    }
+                    var html = '';
+                    if( lang == 'mermaid' ||code.match(/^sequenceDiagram/) || code.match(/^graph/) ||
+                        code.match(/^gantt/) ||  code.match(/^mermaid/) ){
+                        var cb = function(svgGraph) {
+                            //console.log("svgGraph"+svgGraph);
+                            code = svgGraph;
+                        }
+                        try{
+                            mermaid.render('mermaid_'+new Date().getTime(),code,cb);
+                        }catch (e) {
+                            var baseCode = "#/edit/"+Base64.encodeURI(code);
+                            code = "<h5 style='color: #ffa637'>流程图设计存在语法错误。"
+                                 + "<a href='https://mermaidjs.github.io/mermaid-live-editor"+baseCode+"' target='_blank'>推荐在线语法检查</a></h5>"
+                                 + code;
+                        }
+                        return '<div class="mermaid" >' + code + '</div>';
+                    }
+
+                    var hl = Prism.highlight(code, Prism.languages[lang] || Prism.languages.markup)
+                    return html + '<pre v-pre data-lang="' + lang + '">'+jsonEdit+'<code class="lang-' + lang + '">' + hl + '</code></pre>'
+                }
+            }
+        },
+        alias: {},
+        search:{
+            maxAge: 86400000, // 过期时间，单位毫秒，默认一天
+            placeholder: '搜索',
+            noData: '未找到结果'
+        },
+        plugins: [
+            function (hook, vm) {
+                var footer = [
+                    '<hr/>',
+                    '<footer>',
+                    '</footer>'
+                ].join('');
+                hook.init(function() { })
+                hook.beforeEach(function(md) {
+                    return md ;
+                })
+                hook.afterEach(function(html, next) {
+                    var reqParam = getQueryParam();
+                    if(reqParam.module){
+                        var moduleHtml = staticDomain + "monitor/view/"+reqParam.module+".html";
+                        var modulejs   = staticDomain + "monitor/view/"+reqParam.module+".js";
+                        /**引入具体的统计页面信息*/
+                        fetch(moduleHtml).then(function(response) {
+                            return response.text();
+                        }).then(function(body) {
+                            next(body+footer);
+                            SystemJS.import(modulejs).catch(function(err){ console.error(err); });
+                        }).catch(function(ex) {
+                            console.error('加载失败！',ex);
+                            next(html+footer);
+                        });
+                    }else{
+                        next(html+footer);
                     }
                 })
             }
-
-        })()
-    </script>
-</head>
-
-<body>
-<div class="am-g">
-    <div class="am-u-sm-2"></div>
-    <div class="am-u-sm-4">
-       <h1  >服务运行情况</h1>
-    </div>
-    <div class="am-u-sm-6" id="sys_info">
-        <select data-am-selected id="select_id">
-            <option value="all" selected>监控全部服务</option>
-        </select>
-        <button type="button" class="am-btn am-btn-success autoGetSysInfo" onclick="autoGetSysInfo()">自动(开关)监控</button> 
-        <button type="button" class="am-btn am-btn-warning" onclick="apiMetricsClear()">清理接口统计</button>
-    </div>
-</div>
-<div class="am-g">
-    <div class="am-u-sm-8">
-        <canvas id="canvas_thread"></canvas>
-        <canvas id="canvas_metric"></canvas>
-        <canvas id="canvas_head"></canvas>
-    </div>
-    <div class="am-u-sm-4" id="sys_info">
-        <table class="am-table am-table-bordered am-table-radius">
-            <thead>
-            <tr><th>名称</th><th>状态描述</th></tr>
-            </thead>
-            <tbody id="tbody_sys_info">
-
-            </tbody>
-        </table>
-    </div>
-</div>
-<div class="am-g">
-    <div class="am-u-sm-12 am-scrollable-vertical"> 
-         <table class="am-table am-table-bordered am-table-radius " >
-            <thead>
-               <tr>
-                <th>服务器ip</th>
-                <th>请求开始时间</th>
-                <th>请求结束时间</th>
-                <th>请求耗时(s) 
-                   <button class="am-badge am-badge-success am-radius" onclick="showTimeOut()">显示>3s</button>
-                </th>
-                </tr>
-            </thead>
-            <tbody id="tbody_sys_req_info" >
-
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<script>
-
-    var autoGetSysStatus = true;
-
-    var autoGetSysInfo = function () {
-        autoGetSysStatus = !autoGetSysStatus;
-        $('.autoGetSysInfo').toggleClass('am-btn-secondary');
-        $('.autoGetSysInfo').toggleClass('am-btn-success');
+        ]
     }
-
-    var apiMetricsClear = function(){
-         JQ_COM_API.requestByJson({
-            url:"/admin/monitor/api_metrics_clear",
-            method:"DELETE"
-        },{
-            success:function(req,data){
-                 var ip = data.message || {};
-                 alert("服务器("+ip+")api接口统计已经被清理");
-            },fail: function(req,data){
-                //alert("请求出错");
-                return;
-            }
-        })
+    if (typeof navigator.serviceWorker !== 'undefined') {
+       // navigator.serviceWorker.register('/dist/docsify/sw.js')
     }
-    /**系统请求信息*/
-    var sysReqInfo = {
-        reqStartTime:null,
-        reqEndTime:null,
-        serviceIp:"127.0.0.1"
-    }
-    /**获取数据的次数*/
-    var dataCount  = 0 ;
-    var getSysInfo = function () { 
-        if(!autoGetSysStatus){
-            return;
-        }
-        sysReqInfo.reqStartTime = moment();
-        JQ_COM_API.requestByJson({
-            url:"/admin/monitor/metrics_jvm",
-            method:"GET"
-        },{
-            success:function(req,data){
-                sysReqInfo.reqEndTime = moment();
-                dataCount ++;
-                var result = data.data || {};
-                var ip  = result.operatingSystemInfo.ip;
-                sysReqInfo.serviceIp = ip;
-                 showSysReqInfo(true);
-                if( $("#select_id").val() == ip || $("#select_id").val() == "all"  ){
-                    /**显示线程*/
-                    showThreadGroupChart(result.containerThreadInfo);
-                    /**显示接口次数*/
-                    showMMtricChart(result.metricRegistryInfo.metrics);
-                    /**显示内存信息*/
-                    showHeadChart(result.containerMemoryInfo);
-                    /**显示系统信息*/
-                    sysInfo(result);
-                    selectPrepend(result.operatingSystemInfo.ip);
-                }
-            },fail: function(req,data){
-                sysReqInfo.reqEndTime = moment();
-                showSysReqInfo(false);
-                //alert("请求出错");
-                return;
-            }
-        })
-        window.chartColors = {
-            red: 'rgb(255, 99, 132)',
-            orange: 'rgb(255, 159, 64)',
-            yellow: 'rgb(255, 205, 86)',
-            green: 'rgb(75, 192, 192)',
-            blue: 'rgb(54, 162, 235)',
-            purple: 'rgb(153, 102, 255)',
-            grey: 'rgb(201, 203, 207)'
-        };
-    }
-    getSysInfo();
-    window.setInterval(getSysInfo,3000);
-
-
-   /**-------------------线程图--------------------*/
-    var threadConfig = {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [],
-            datasetIndexs:{}
-        },
-        options: {
-            onClick: function(e){
-                console.log(this);
-            },
-            responsive: true,
-            legend: {
-                position: 'bottom',
-            },
-            title:{
-                display:true,
-                text:'当前服务线程(个数top10)运行情况'
-            },
-            tooltips: {
-                mode: 'index',
-                intersect: false,
-            },
-            hover: {
-                mode: 'nearest',
-                intersect: true
-            },
-            scales: {
-                xAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: '时间'
-                    }
-                }],
-                yAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: '线程数(个)'
-                    }
-                }]
-            }
-        }
-    };
-
-    var threadColors = {};
-
-    var ctx       = document.getElementById("canvas_thread").getContext("2d");
- 
-    var showThreadGroupChart = function(threadsInfo) {
-        var threadGroupInfo = threadsInfo.threadGroupInfo;
-        threadConfig.data.labels.push(moment().format('HH:mm:ss'));
-        for( var key in threadGroupInfo){
-            setThreadInfo(key,threadGroupInfo[key].length);
-        }
-        /**线程总数*/
-        setThreadInfo("线程总数",threadsInfo.totalStartedThreadCount);
-        /**仍活动的线程总数*/
-        setThreadInfo("活跃线程总数",threadsInfo.threadCount);
-        if(window.myChart){
-            window.myChart.update();
-        }else {
-            window.myChart = new Chart(ctx, threadConfig);
-        }
-    };
-
-    /**-------------------接口图--------------------*/
-    var metricConfig = {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [],
-            datasetIndexs:{}
-        },
-        options: {
-            onClick: function(e){
-                //console.log(this);
-            },
-            responsive: true,
-            legend: {
-                position: 'bottom',
-            },
-            title:{
-                display:true,
-                text:'当前服务接口处理次数统计运行情况'
-            },
-            tooltips: {
-                mode: 'index',
-                intersect: false,
-            },
-            hover: {
-                mode: 'nearest',
-                intersect: true
-            },
-            scales: {
-                xAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: '时间'
-                    }
-                }],
-                yAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: '接口处理次数(个)'
-                    }
-                }]
-            }
-        }
-    };
-    var metricColors = {};
-    var ctxMetrics = document.getElementById("canvas_metric").getContext("2d");
-    var quickSort = function(arr) {
-    　　if (arr.length <= 1) { return arr; }
-    　　var pivotIndex = Math.floor(arr.length / 2);
-    　　var pivot = arr.splice(pivotIndex, 1)[0];
-    　　var left = [];
-    　　var right = [];
-    　　for (var i = 0; i < arr.length; i++){
-    　　　　if (arr[i] > pivot) {
-    　　　　　　left.push(arr[i]);
-    　　　　} else {
-    　　　　　　right.push(arr[i]);
-    　　　　}
-    　　}
-    　　return quickSort(left).concat([pivot], quickSort(right));
-    }
-    var showMMtricChart = function(metrics) {
-        metricConfig.data.labels.push(moment().format('HH:mm:ss'));
-        var arr = new Array(metrics.length)
-        var i=0;
-        for( var key in metrics){
-             arr[i] = metrics[key].count;
-             i++;
-        }  
-        /**排序，取最高10条*/
-        arr = quickSort(arr);
-        var threshold =  arr.length <=5 ? arr.length : arr[4]; 
-        for( var key in metrics){
-            setApiCount (key,metrics,threshold)
-        }
-        if(window.ctxMetric){
-            window.ctxMetric.update();
-        }else {
-            window.ctxMetric = new Chart(ctxMetrics, metricConfig);
-        }
-    };
-
-
- 
-
- /**-------------------内存图--------------------*/
-    var headConfig = {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [],
-            datasetIndexs:{}
-        },
-        options: {
-            onClick: function(e){
-                console.log(this);
-            },
-            responsive: true,
-            legend: {
-                position: 'bottom',
-            },
-            title:{
-                display:true,
-                text:'当前服务内存运行情况'
-            },
-            tooltips: {
-                mode: 'index',
-                intersect: false,
-            },
-            hover: {
-                mode: 'nearest',
-                intersect: true
-            },
-            scales: {
-                xAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: '时间'
-                    }
-                }],
-                yAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: '已使用内存数(M)'
-                    }
-                }]
-            }
-        }
-    };
-
-    var headColors = {};
-
-    var ctxHead       = document.getElementById("canvas_head").getContext("2d");
-
-    var showHeadChart = function(headsInfo) { 
-        headConfig.data.labels.push(moment().format('HH:mm:ss'));
-        for( var key in headsInfo){
-            setHeadInfo(headsInfo[key].name,headsInfo[key].used);
-        } 
-        if(window.myHeadChart){
-            window.myHeadChart.update();
-        }else {
-            window.myHeadChart = new Chart(ctxHead, headConfig);
-        }
-    };
-
-    var setThreadInfo = function (key,data) {
-        var threadColor = threadColors[key];
-        if(!threadColor){
-            if(data <5){
-               return ;
-            }
-            threadColors[key] = randomColor();
-        }
- 
-        var dataset = {
-            label: key,
-            backgroundColor: threadColors[key],
-            borderColor: threadColors[key],
-            data: [
-                data
-            ],
-            fill: false,
-        }
-        if(threadConfig.data.datasetIndexs[key]){
-            threadConfig.data.datasets.forEach(function(dataset) {
-                if(dataset.label == key){
-                    dataset.data.push(data);
-                }
-            });
-        }else {
-            threadConfig.data.datasetIndexs[key] = true;
-            if(dataCount >1){ 
-                var arr = [];
-                for(var i = 0 ; i<dataCount ; i++){
-                   arr[i]=0;
-                }
-                /**以前未显示的数据补充0*/
-                Array.prototype.push.apply(arr, dataset.data);
-                dataset.data = arr;
-            }
-            threadConfig.data.datasets.push(dataset);
-        }
-    }
-
-    var setApiCount = function (key,metrics,threshold) {
-         var tInfo = metrics[key];
-        var metricColor = metricColors[key];
-        if(!metricColor){
-            if(tInfo.count <threshold ){
-             return ;
-            }
-            metricColors[key] = randomColor();
-        } 
-        var dataset = {
-            label: key,
-            backgroundColor: metricColors[key],
-            borderColor: metricColors[key],
-            data: [
-                tInfo.count
-            ],
-            fill: false,
-        }
-        if(metricConfig.data.datasetIndexs[key]){
-            metricConfig.data.datasets.forEach(function(dataset) {
-                if(dataset.label == key){
-                    dataset.data.push(tInfo.count);
-                }
-            });
-        }else {
-            metricConfig.data.datasetIndexs[key] = true;
-            if(dataCount >1){ 
-                var arr = [];
-                for(var i = 0 ; i<dataCount ; i++){
-                   arr[i]=0;
-                }
-                /**以前未显示的数据补充0*/
-                Array.prototype.push.apply(arr, dataset.data);
-                dataset.data = arr;
-            }
-            metricConfig.data.datasets.push(dataset);
-        }
-    }
-
-    var setHeadInfo = function (key,data) {
-        var headColor = headColors[key];
-        if(!headColor){ 
-            headColors[key] = randomColor();
-        } 
-        var dataset = {
-            label: key,
-            backgroundColor: headColors[key],
-            borderColor: headColors[key],
-            data: [
-                data
-            ],
-            fill: false,
-        }
-        if(headConfig.data.datasetIndexs[key]){
-            headConfig.data.datasets.forEach(function(dataset) {
-                if(dataset.label == key){
-                    dataset.data.push(data);
-                }
-            });
-        }else {
-            headConfig.data.datasetIndexs[key] = true;
-            if(dataCount >1){ 
-                var arr = [];
-                for(var i = 0 ; i<dataCount ; i++){
-                   arr[i]=0;
-                }
-                /**以前未显示的数据补充0*/
-                Array.prototype.push.apply(arr, dataset.data);
-                dataset.data = arr;
-            }
-            headConfig.data.datasets.push(dataset);
-        }
-    }
-
-    var showSysReqInfo = function(stat){  
-         var  badgeTmp =  '<span class="am-badge am-badge-success am-radius">成功</span>';
-              badgeTmp = stat ? badgeTmp : '<span class="am-badge am-badge-warning am-radius">失败</span>';
-         var  timeout  = sysReqInfo.reqEndTime.diff(sysReqInfo.reqStartTime)/1000;
-         var  tr = 'noneTimeout';
-              if(timeout > 3){
-                 tr='';
-                 timeout  =  '<span class="am-badge am-badge-warning am-radius">'+timeout+'</span>'; 
-              }
-              
-         var str = "<tr class='"+tr+"'><td>"+badgeTmp+sysReqInfo.serviceIp+"</td><td>"+sysReqInfo.reqStartTime.format('HH:mm:ss')
-                   +"</td><td>"+sysReqInfo.reqEndTime.format('HH:mm:ss')+"</td><td>"+timeout+"</td></tr>";
-         $('#tbody_sys_req_info').prepend(str);
-    }
-
-    var showTimeOut = function(){ 
-         if($(".noneTimeout").is(":hidden")){  
-             $('.noneTimeout').show();
-        }else{  
-             $('.noneTimeout').hide();
-        }   
-    }
-
-
-    var randomColor = function(){
-        return '#'+('00000'+(Math.random()*0x1000000<<0).toString(16)).slice(-6);
-    }
-
-    var sysInfo = function (data) {
-        var  sysData   = data.operatingSystemInfo   || {};
-        var memoryData = data.containerMemoryInfo || {};
-        var threadData = data.containerThreadInfo || {};
-
-        var tmp  = sysTmpInfo("服务ip",sysData.ip);
-            tmp += sysTmpInfo("服务名称",sysData.name+"("+sysData.arch+sysData.version+",核数"+sysData.availableProcessors+")");
-            tmp += sysTmpInfo("总物理内存",sysData.totalPhysicalMemory+"(M)");
-            tmp += sysTmpInfo("已用物理内存",sysData.usedPhysicalMemorySize+"(M)");
-            tmp += sysTmpInfo("剩余物理内存",sysData.freePhysicalMemory+"(M)");
-            //tmp += sysTmpInfo("总交换空间",sysData.totalSwapSpaceSize+"(M)");
-            //tmp += sysTmpInfo("已用交换空间",sysData.usedSwapSpaceSize+"(M)");
-            //tmp += sysTmpInfo("剩余交换空间",sysData.freeSwapSpaceSize+"(M)");
-
-            tmp += sysTmpInfo("仍活动的线程总数",threadData.threadCount);
-            tmp += sysTmpInfo("峰值",threadData.peakThreadCount);
-            tmp += sysTmpInfo("线程总数（被创建并执行过的线程总数）",threadData.totalStartedThreadCount);
-            tmp += sysTmpInfo("当初仍活动的守护线程（daemonThread）总数",threadData.daemonThreadCount);
-
-            for(var i in memoryData){
-                 var memory = memoryData[i];
-                tmp += sysTmpInfo("内存"+memory.name,"初始"+memory.init+
-                                  "(M),上限"+memory.max+"(M),已使用"+memory.used
-                                  +"(M),已申请"+memory.committed+"(M),使用率"+memory.usedRate+"(%)");
-            }
-           $('#tbody_sys_info').html(tmp);
-    }
-
-    var sysTmpInfo = function (name,info) {
-        return"<tr><td>"+name+"</td><td>"+info+"</td></tr>";
-    }
-
-    var selectOption  = {};
-    var selectPrepend = function (ip) {
-        if(!selectOption[ip]){
-            $("#select_id").prepend("<option value='"+ip+"'>内网("+ip+")</option>");
-            selectOption[ip] = ip;
-        }
-    }
-
 
 </script>
-</body>
+<script src="/dist/zepto/zepto.min.js" ></script>
 
+<script src="/dist/docsify/docsify.js" ></script>
+<script src="/dist/json/jsoneditor.min.js" ></script>
+<!-- 增加文档查询 -->
+<script type="text/javascript" src="/dist/docsify/plugins/search.min.js"></script>
+<!-- 增加emoji,表情解析 -->
+<script type="text/javascript" src="/dist/docsify/plugins/emoji.js"></script>
+<!-- 外链脚本 - External Script 如果文档里的 script 是内联脚本，可以直接执行；而如果是外链脚本（即 js 文件内容由 src 属性引入），则需要使用此插件。 -->
+<script type="text/javascript" src="/dist/docsify/plugins/external-script.js"></script>
+<!-- 图片缩放 - Zoom imageMedium's 风格的图片缩放插件. 基于 zoom-image。 -->
+<!-- 代码高亮.默认支持 CSS、JavaScript 和 HTML.其他扩展 -->
+<script type="text/javascript" src="/dist/fetch/fetch.js"></script>
+<script src="https://cdn.bootcss.com/Chart.js/2.7.2/Chart.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.19.0/moment.min.js"></script>
+<script src="/dist/system/system.js"></script>
+<!--<script src="https://cdn.bootcss.com/amazeui/2.7.2/js/amazeui.min.js"></script>-->
+<script>
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: 'forest',
+        flowchart:{
+            useMaxWidth:true,
+            htmlLabels:true
+        }
+    });
+    /**封装ajax*/
+    var requestByJson;
+    requestByJson = function (req, fun) {
+        fun.success = fun.success || function (req) {
+            console.log('获取成功')
+        };
+        fun.cancel = fun.cancel || function (req) {
+            console.log('操作取消')
+        };
+        fun.fail = fun.fail || function (req) {
+            console.log('操作失败')
+        };
+        var body = null;
+        if (req.body) {
+            body = JSON.stringify(req.body);
+        }
+       var token =  sessionStorage.getItem('security_authorization');
+        fetch(baseDomain + req.url, {
+            method: req.method || "POST",
+            headers: {
+                'Content-Type': req.contentType || 'application/json',
+                'Authorization':  (token?('Admin ' +token): '')
+            },
+            body: body
+        }).then(function (response) {
+            return response.json()
+        }).then(function (data) {
+            var code = data.status;
+            if (code == 200) {
+                fun.success(req, data);
+            } else if (code == 401 || code == 403) {
+                window.location.href = baseDomain + "monitor/login.html?redirect_uri=" + window.location.href;
+            } else {
+                fun.fail(req, data);
+            }
+        }).catch(function (ex) {
+            console.log('parsing failed', ex)
+        })
+    };
+
+</script>
+
+</body>
 </html>

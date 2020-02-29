@@ -1,22 +1,21 @@
 package com.runcoding.monitor.support.jvm;
 
-
-import com.runcoding.monitor.web.model.jvm.ContainerThreadInfo;
-import com.runcoding.monitor.web.model.jvm.GroupThreadInfo;
-import com.runcoding.monitor.web.model.jvm.MemoryInfo;
-import com.runcoding.monitor.web.model.jvm.OperatingSystemInfo;
-import org.assertj.core.util.Lists;
+import com.google.common.collect.Lists;
+import com.runcoding.monitor.web.model.container.ContainerThreadInfo;
+import com.runcoding.monitor.web.model.container.GroupThreadInfo;
+import com.runcoding.monitor.web.model.container.MemoryInfo;
+import com.runcoding.monitor.web.model.container.OperatingSystemInfo;
+import com.runcoding.monitor.web.utils.IpUtils;
+import com.runcoding.monitor.web.utils.ThreadUtil;
 
 import java.lang.management.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Created by xukai on 2017/7/27.
+ * Created by runcoding on 2017/7/27.
  */
 public class JvmProcessor {
 
@@ -67,20 +66,24 @@ public class JvmProcessor {
     }
 
     /**线程信息*/
-    public static ContainerThreadInfo getContainerThreadInfo(){
+    public static ContainerThreadInfo getContainerThreadInfo(boolean isDumpAllThread){
         ContainerThreadInfo info =  new ContainerThreadInfo();
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
         info.setThreadCount(threadMXBean.getThreadCount());
         info.setPeakThreadCount(threadMXBean.getPeakThreadCount());
         info.setTotalStartedThreadCount(threadMXBean.getTotalStartedThreadCount());
         info.setDaemonThreadCount(threadMXBean.getDaemonThreadCount());
-        info.setThreadGroupInfo(getThreadGroupInfo());
+        info.setThreadGroupInfo(getThreadGroupInfo(isDumpAllThread));
+        //info.setThreadGroupInfo(getThreadGroupInfo(threadMXBean,isDumpAllThread));
         return info;
     }
 
-    public static Map<String, List<GroupThreadInfo>> getThreadGroupInfo(){
+    public static Map<String, List<GroupThreadInfo>> getThreadGroupInfo(boolean isDumpAllThread){
         Map<String, List<GroupThreadInfo>> threadGroupInfo = new HashMap<>();
-        ThreadGroup root =ThreadUtil.getRoot();
+        if(!isDumpAllThread){
+            return threadGroupInfo;
+        }
+        ThreadGroup root = ThreadUtil.getRoot();
         Thread[] threads = new Thread[root.activeCount()];
         while (root.enumerate(threads, true) == threads.length) {
             threads = new Thread[threads.length * 2];
@@ -153,8 +156,10 @@ public class JvmProcessor {
 
         OperatingSystemInfo systemInfo = new OperatingSystemInfo();
 
-        systemInfo.setRunName(getRunName());
-        systemInfo.setRunPid(getRunPid());
+        String runInfo = ManagementFactory.getRuntimeMXBean().getName();
+        String[] runInfoName = runInfo.split("@");
+        systemInfo.setRunName(runInfoName.length >0 ? runInfoName[1] : "user");
+        systemInfo.setRunPid(runInfoName[0]);
 
         OperatingSystemMXBean system = ManagementFactory.getOperatingSystemMXBean();
 
@@ -163,36 +168,22 @@ public class JvmProcessor {
         systemInfo.setArch(system.getArch());
         systemInfo.setAvailableProcessors(system.getAvailableProcessors());
 
-        systemInfo.setIp(getIp());
+        systemInfo.setIp(IpUtils.getIp());
         systemInfo.setSystemLoadAverage(system.getSystemLoadAverage());
-
         Runtime runtime = Runtime.getRuntime();
+        long totalMemory = runtime.totalMemory();
+        long freeMemory  = runtime.freeMemory();
+        long maxMemory   = runtime.maxMemory();
+        /**how much of the current heap the VM is using*/
+        long usedMemory = totalMemory - freeMemory;
+        /**available memory i.e. Maximum heap size minus the current amount used*/
+        long availableMemory = maxMemory - usedMemory;
 
-        long totalPhysicalMemory = runtime.totalMemory();
-        long freePhysicalMemory  = runtime.freeMemory();
-        long usedPhysicalMemorySize =totalPhysicalMemory - freePhysicalMemory;
-
-        systemInfo.setTotalPhysicalMemory(totalPhysicalMemory/MB);
-        systemInfo.setUsedPhysicalMemorySize(usedPhysicalMemorySize/MB);
-        systemInfo.setFreePhysicalMemory(freePhysicalMemory/MB);
-
-
-        long totalSwapSpaceSize = 0;
-        long freeSwapSpaceSize  = 0;
-        long usedSwapSpaceSize  = totalSwapSpaceSize - freeSwapSpaceSize;
-
-        systemInfo.setTotalSwapSpaceSize(totalSwapSpaceSize/MB);
-        systemInfo.setUsedSwapSpaceSize(usedSwapSpaceSize/MB);
-        systemInfo.setFreeSwapSpaceSize(freeSwapSpaceSize/MB);
+        systemInfo.setTotalMemory(totalMemory / MB);
+        systemInfo.setFreeMemory(freeMemory / MB);
+        systemInfo.setMaxMemory(maxMemory / MB);
+        systemInfo.setUsedMemory(usedMemory / MB);
+        systemInfo.setAvailableMemory(availableMemory / MB);
         return systemInfo;
-    }
-
-    /**获取ip*/
-    public static String getIp() {
-        try {
-            return InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException e) {
-            return   "127.0.0.1";
-        }
     }
 }
