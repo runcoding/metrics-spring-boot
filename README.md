@@ -53,8 +53,8 @@ csp:
   webHook:
     # 钉钉文档 https://open-doc.dingtalk.com/docs/doc.htm?treeId=257&articleId=105735&docType=1
     dingTalk:
-      atMobiles: 15869111000,15869111001 #接受钉钉，通知需要被@的人
-      accessToken: 84b2a8576d514dfc59e86038b72d3f0bd9362461f5a9d2267a10a64e98f93637 #钉钉通知机器人
+      atMobiles: 1580000000,158000001 #接受钉钉，通知需要被@的人
+      accessToken: 84b2a8576d5193637 #钉钉通知机器人
 
 eureka:   # 多节点部署需配置eureka,用做哨兵变更规则
 
