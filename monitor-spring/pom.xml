@@ -28,7 +28,7 @@
         <swagger.version>2.9.2</swagger.version>
         <swagger.annotations.version>1.5.20</swagger.annotations.version>
         <spring.boot.starter.version>2.0.0</spring.boot.starter.version>
-        <mysql.connector.version>8.0.15</mysql.connector.version>
+        <mysql.connector.version>8.0.28</mysql.connector.version>
     </properties>
 
     <dependencies>
